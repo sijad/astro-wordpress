@@ -1,0 +1,23 @@
+{
+  "name": "@sijad/wp-astro",
+  "private": true,
+  "scripts": {
+    "clean": "rimraf -g \"packages/**/lib\" \"packages/**/*.tsbuildinfo\"",
+    "compile": "tsc -b tsconfig.build.json",
+    "prettier": "prettier \"*.{js,json,yml,md}\" \"packages/**/*\"",
+    "format": "npm run prettier -- --write",
+    "format:check": "npm run prettier -- --check",
+    "lint": "npm run format:check",
+    "test": "npm run --ws test --if-present",
+    "prepare": "npm run compile"
+  },
+  "devDependencies": {
+    "prettier": "3.2.2",
+    "rimraf": "5.0.5",
+    "typescript": "5.3.3"
+  },
+  "workspaces": [
+    "demo",
+    "packages/*"
+  ]
+}
