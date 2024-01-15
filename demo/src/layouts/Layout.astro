@@ -2,23 +2,26 @@
 <html lang="en">
   <head>
     <meta charset={`<?php bloginfo( 'charset' ); ?>`} />
-    <meta name="description" content="Astro description" />
     <meta name="viewport" content="width=device-width" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href={`<?php echo get_theme_file_uri('favicon.svg'); ?>`}
+    />
     <meta name="generator" content={Astro.generator} />
     <Fragment set:html={`<?php wp_head(); ?>`} />
   </head>
   <body>
     <Fragment
       set:html={`<?php
-wp_nav_menu(
-  array(
-    'theme_location' => 'main-menu',
-    'container'      => 'ul',
-    'menu_class'     => 'main-menu',
-  )
-);
-?>`}
+        wp_nav_menu(
+          array(
+            'theme_location' => 'main-menu',
+            'container'      => 'ul',
+            'menu_class'     => 'main-menu',
+          )
+        );
+        ?>`}
     />
     <slot />
     <Fragment set:html={`<?php wp_footer(); ?>`} />

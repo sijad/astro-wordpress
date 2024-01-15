@@ -1,5 +1,5 @@
 import { IncomingMessage, ServerResponse } from "node:http";
-import {parse} from 'node:url';
+import { parse } from "node:url";
 
 export function rewriteLinksMiddleware(userServer: URL) {
   const host = userServer.hostname;
@@ -63,13 +63,7 @@ export function rewriteLinksMiddleware(userServer: URL) {
         }
       }
 
-      return [
-        captured,
-        "//",
-        proxyUrl,
-        out.path,
-        out.hash || "",
-      ].join("");
+      return [captured, "//", proxyUrl, out.path, out.hash || ""].join("");
     },
   };
 }
