@@ -11,7 +11,7 @@
         "lint:astro": "astro check",
         "lint:js+ts": "eslint --ext .astro,.js,.jsx,.cjs,.ts,.tsx,.cts --ignore-path .gitignore .",
         "lint:format": "prettier --check .",
-        "lint:types": "tsc --noEmit",
+        "lint:types": "tsc -p tsconfig.build.json --noEmit",
         "lint:fix": "npm-run-all --serial lint:fix:*",
         "lint:fix:js+ts": "npm run lint:js+ts --fix",
         "lint:fix:format": "prettier --write ."
