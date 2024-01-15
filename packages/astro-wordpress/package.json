@@ -21,8 +21,7 @@
     "dependencies": {
         "@types/node": "^20.0.0",
         "fast-glob": "^3.3.2",
-        "resp-modifier": "^6.0.2",
-        "sync-directory": "^6.0.5"
+        "resp-modifier": "^6.0.2"
     },
     "devDependencies": {
         "typescript": "5.3.3"

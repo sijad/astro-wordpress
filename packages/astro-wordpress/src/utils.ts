@@ -62,9 +62,13 @@ export function rewriteLinksMiddleware(userServer: URL) {
         }
       }
 
-      return [captured, "//", proxyUrl, out.pathname || "", out.hash || ""].join(
-        "",
-      );
+      return [
+        captured,
+        "//",
+        proxyUrl,
+        `${out.pathname || ""}${out.search}`,
+        out.hash || "",
+      ].join("");
     },
   };
 }
