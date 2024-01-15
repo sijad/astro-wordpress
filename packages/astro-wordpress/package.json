@@ -1,5 +1,5 @@
 {
-  "name": "wp-astro",
+  "name": "astro-wordpress",
   "version": "0.0.1",
   "description": "Astro adapter to generate wordpress themes and php codes.",
   "main": "lib/index.js",

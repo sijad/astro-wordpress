@@ -51,7 +51,7 @@ eval('?>'. $__getDev() . '<?php');`;
   }
 
   return {
-    name: "wp-astro-adapter",
+    name: "astro-wordpres",
     hooks: {
       "astro:config:setup": ({ updateConfig }) => {
         updateConfig({
@@ -65,7 +65,7 @@ eval('?>'. $__getDev() . '<?php');`;
       "astro:config:done": ({ setAdapter, config }) => {
         srcDir = config.srcDir.pathname;
         setAdapter({
-          name: "wp-astro-adapter",
+          name: "astro-wordpres-adapter",
           supportedAstroFeatures: {
             staticOutput: "stable",
             serverOutput: "unsupported",
@@ -79,7 +79,7 @@ eval('?>'. $__getDev() . '<?php');`;
       },
       "astro:server:setup": async ({ server, logger }) => {
         if (!devProxyTarget) {
-          logger.warn("wp-astro requires the `devProxyTarget` option for development mode. Skipping.");
+          logger.warn("astro-wordpres requires the `devProxyTarget` option for development mode. Skipping.");
           return;
         }
 

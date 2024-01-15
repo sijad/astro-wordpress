@@ -2,7 +2,7 @@
   "files": [],
   "references": [
     {
-      "path": "packages/wp-astro"
+      "path": "packages/astro-wordpress"
     }
   ]
 }
