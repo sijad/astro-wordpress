@@ -1,5 +1,4 @@
 import { IncomingMessage, ServerResponse } from "node:http";
-import { parse } from "node:url";
 
 export function rewriteLinksMiddleware(userServer: URL) {
   const host = userServer.hostname;
@@ -48,22 +47,22 @@ export function rewriteLinksMiddleware(userServer: URL) {
         match = match.slice(1);
       }
 
-      const out = parse(match);
+      const out = new URL(match);
 
       if (!out.host) {
         string = string.replace(/^\//, "");
         return captured + match.replace(string, proxyUrl);
       }
 
-      if (out.path === "/") {
+      if (out.pathname === "/") {
         if (match.slice(-1) === "/") {
-          out.path = "/";
+          out.pathname = "/";
         } else {
-          out.path = "";
+          out.pathname = "";
         }
       }
 
-      return [captured, "//", proxyUrl, out.path || "", out.hash || ""].join(
+      return [captured, "//", proxyUrl, out.pathname || "", out.hash || ""].join(
         "",
       );
     },
