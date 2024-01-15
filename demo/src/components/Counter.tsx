@@ -1,25 +1,26 @@
-import { useState } from 'react';
-import './Counter.css';
+import "./Counter.css";
+
+import { useState } from "react";
 
 export default function Counter({
-	children,
-	count: initialCount,
+  children,
+  count: initialCount,
 }: {
-	children: JSX.Element;
-	count: number;
+  children: JSX.Element;
+  count: number;
 }) {
-	const [count, setCount] = useState(initialCount);
-	const add = () => setCount((i) => i + 1);
-	const subtract = () => setCount((i) => i - 1);
+  const [count, setCount] = useState(initialCount);
+  const add = () => setCount((i) => i + 1);
+  const subtract = () => setCount((i) => i - 1);
 
-	return (
-		<>
-			<div className="counter">
-				<button onClick={subtract}>-</button>
-				<pre>{count}</pre>
-				<button onClick={add}>+</button>
-			</div>
-			<div className="counter-message">{children}</div>
-		</>
-	);
+  return (
+    <>
+      <div className="counter">
+        <button onClick={subtract}>-</button>
+        <pre>{count}</pre>
+        <button onClick={add}>+</button>
+      </div>
+      <div className="counter-message">{children}</div>
+    </>
+  );
 }

@@ -2,9 +2,9 @@ import { IncomingMessage, ServerResponse } from "node:http";
 import { parse } from "node:url";
 
 export function rewriteLinksMiddleware(userServer: URL) {
-  var host = userServer.hostname;
-  var string = host;
-  var port = userServer.port;
+  const host = userServer.hostname;
+  let string = host;
+  const port = userServer.port;
 
   if (host && port) {
     if (parseInt(port, 10) !== 80) {
@@ -12,7 +12,7 @@ export function rewriteLinksMiddleware(userServer: URL) {
     }
   }
 
-  var reg = new RegExp(
+  const reg = new RegExp(
     // a simple, but exact match
     "https?:\\\\/\\\\/" +
       string +
@@ -48,10 +48,10 @@ export function rewriteLinksMiddleware(userServer: URL) {
         match = match.slice(1);
       }
 
-      var out = parse(match);
+      const out = parse(match);
 
       if (!out.host) {
-        string = string.replace(/^(\/)/, "");
+        string = string.replace(/^\//, "");
         return captured + match.replace(string, proxyUrl);
       }
 
@@ -63,7 +63,9 @@ export function rewriteLinksMiddleware(userServer: URL) {
         }
       }
 
-      return [captured, "//", proxyUrl, out.path || "", out.hash || ""].join("");
+      return [captured, "//", proxyUrl, out.path || "", out.hash || ""].join(
+        "",
+      );
     },
   };
 }

@@ -1,30 +1,30 @@
 {
-  "name": "astro-wordpress",
-  "version": "0.0.1",
-  "description": "Astro adapter to generate wordpress themes and php codes.",
-  "main": "lib/index.js",
-  "type": "module",
-  "scripts": {
-    "compile": "tsc"
-  },
-  "types": "lib/index.d.ts",
-  "keywords": [
-    "astro",
-    "astro-component",
-    "astro-integration",
-    "astro-adapter",
-    "wordpress",
-    "php-template"
-  ],
-  "author": "sijad",
-  "license": "MIT",
-  "dependencies": {
-    "@types/node": "^20.0.0",
-    "fast-glob": "^3.3.2",
-    "resp-modifier": "^6.0.2",
-    "sync-directory": "^6.0.5"
-  },
-  "devDependencies": {
-    "typescript": "5.3.3"
-  }
+    "name": "astro-wordpress",
+    "version": "0.0.1",
+    "description": "Astro adapter to generate wordpress themes and php codes.",
+    "main": "lib/index.js",
+    "type": "module",
+    "scripts": {
+        "compile": "tsc"
+    },
+    "types": "lib/index.d.ts",
+    "keywords": [
+        "astro",
+        "astro-component",
+        "astro-integration",
+        "astro-adapter",
+        "wordpress",
+        "php-template"
+    ],
+    "author": "sijad",
+    "license": "MIT",
+    "dependencies": {
+        "@types/node": "^20.0.0",
+        "fast-glob": "^3.3.2",
+        "resp-modifier": "^6.0.2",
+        "sync-directory": "^6.0.5"
+    },
+    "devDependencies": {
+        "typescript": "5.3.3"
+    }
 }

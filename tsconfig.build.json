@@ -1,8 +1,8 @@
 {
-  "files": [],
-  "references": [
-    {
-      "path": "packages/astro-wordpress"
-    }
-  ]
+    "files": [],
+    "references": [
+        {
+            "path": "packages/astro-wordpress"
+        }
+    ]
 }

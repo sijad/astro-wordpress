@@ -1,11 +1,11 @@
-import type { AstroIntegration } from "astro";
+import { mkdir, rename, rm, writeFile } from "node:fs/promises";
 import type { AddressInfo } from "node:net";
-
-import { rename, rm, mkdir, writeFile } from "node:fs/promises";
-import { join, relative, basename } from "node:path";
+import { basename, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
-import respModifier from "resp-modifier";
+
+import type { AstroIntegration } from "astro";
 import glob from "fast-glob";
+import respModifier from "resp-modifier";
 import { async as syncDirectory } from "sync-directory";
 
 import { rewriteLinksMiddleware } from "./utils";
@@ -15,16 +15,19 @@ interface Options {
   devProxyTarget?: string;
 }
 
-export default function createIntegration({ outDir = "./theme/", devProxyTarget }: Options = {}): AstroIntegration {
+export default function createIntegration({
+  outDir = "./theme/",
+  devProxyTarget,
+}: Options = {}): AstroIntegration {
   let addr: AddressInfo;
   let srcDir: string;
 
   async function createDevTemplates() {
     const phpAstroFiles = await glob(join(srcDir, "pages/*.php.astro"));
-    const templates = phpAstroFiles.map(f => basename(f).slice(0, -6));
+    const templates = phpAstroFiles.map((f) => basename(f).slice(0, -6));
 
     await Promise.all(
-      templates.map(async f => {
+      templates.map(async (f) => {
         const fname = basename(f);
         const themePath = join(outDir, fname);
 
@@ -79,7 +82,9 @@ eval('?>'. $__getDev() . '<?php');`;
       },
       "astro:server:setup": async ({ server, logger }) => {
         if (!devProxyTarget) {
-          logger.warn("astro-wordpres requires the `devProxyTarget` option for development mode. Skipping.");
+          logger.warn(
+            "astro-wordpres requires the `devProxyTarget` option for development mode. Skipping.",
+          );
           return;
         }
 
