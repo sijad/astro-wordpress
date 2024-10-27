@@ -54,14 +54,14 @@ eval('?>'. $__getDev() . '<?php');`;
   }
 
   async function createDevTemplates() {
-    const phpAstroFiles = await glob(join(srcDir, "pages/*.php.astro"));
+    const phpAstroFiles = await glob(join(srcDir, "pages/**/*.php.astro"));
     const templates = phpAstroFiles.map((f) => basename(f).slice(0, -6));
 
     const promises = templates.map(async (f) => {
       await createDevTemplate(f);
     });
 
-    const pubFiles = await glob(join(pubDir, "*"));
+    const pubFiles = await glob(join(pubDir, "*"), {onlyFiles: false});
     pubFiles.forEach((f) => {
       const themePath = join(outDir, basename(f));
       promises.push(symlink(f, themePath));
