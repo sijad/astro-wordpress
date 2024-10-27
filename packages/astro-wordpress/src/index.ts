@@ -61,7 +61,7 @@ eval('?>'. $__getDev() . '<?php');`;
       await createDevTemplate(f);
     });
 
-    const pubFiles = await glob(join(pubDir, "*"), {onlyFiles: false});
+    const pubFiles = await glob(join(pubDir, "*"), { onlyFiles: false });
     pubFiles.forEach((f) => {
       const themePath = join(outDir, basename(f));
       promises.push(symlink(f, themePath));
