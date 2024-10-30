@@ -7,7 +7,7 @@ import {
   writeFile,
 } from "node:fs/promises";
 import type { AddressInfo } from "node:net";
-import { basename, join, relative } from "node:path";
+import { basename, dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import type { AstroIntegration } from "astro";
@@ -30,8 +30,7 @@ export default function createIntegration({
   let pubDir: string;
 
   async function createDevTemplate(f: string) {
-    const fname = basename(f);
-    const themePath = join(outDir, fname);
+    const themePath = join(outDir, f);
 
     const tempPhp = `<?php
 $__getDev = function() {
@@ -43,19 +42,22 @@ $__getDev = function() {
   ]);
 
   $base = 'http://${addr.address}:${addr.port}';
-  $path = '/${fname}';
+  $path = '/${f}';
 
   return file_get_contents($base . $path, false, $context);
 };
 
 eval('?>'. $__getDev() . '<?php');`;
 
+    await mkdir(dirname(themePath), { recursive: true });
     await writeFile(themePath, tempPhp, "utf8");
   }
 
   async function createDevTemplates() {
     const phpAstroFiles = await glob(join(srcDir, "pages/**/*.php.astro"));
-    const templates = phpAstroFiles.map((f) => basename(f).slice(0, -6));
+    const templates = phpAstroFiles.map((f) =>
+      relative(join(srcDir, "/pages"), f).slice(0, -6),
+    );
 
     const promises = templates.map(async (f) => {
       await createDevTemplate(f);
