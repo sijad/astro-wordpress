@@ -92,7 +92,7 @@ eval('?>'. $__getDev() . '<?php');`;
           name: "astro-wordpress-adapter",
           adapterFeatures: {
             edgeMiddleware: false,
-            buildOutput: 'static',
+            buildOutput: "static",
           },
           supportedAstroFeatures: {
             staticOutput: "stable",
@@ -176,8 +176,8 @@ eval('?>'. $__getDev() . '<?php');`;
 
         await createDevTemplates();
       },
-      "astro:routes:resolved": ({routes: _routes}) => {
-        routes = _routes
+      "astro:routes:resolved": ({ routes: _routes }) => {
+        routes = _routes;
       },
       "astro:build:done": async ({ dir: _dir, assets }) => {
         const dir = fileURLToPath(_dir);

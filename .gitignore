@@ -68,3 +68,6 @@ lib/
 src/env.d.ts
 
 *.tsbuildinfo
+
+.astro
+demo/theme/
