@@ -10,11 +10,11 @@ import type { AddressInfo } from "node:net";
 import { basename, dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import type { AstroIntegration } from "astro";
+import type { AstroIntegration, IntegrationResolvedRoute } from "astro";
 import glob from "fast-glob";
 import respModifier from "resp-modifier";
 
-import { rewriteLinksMiddleware } from "./utils";
+import { rewriteLinksMiddleware } from "./utils.js";
 
 interface Options {
   outDir?: string;
@@ -28,6 +28,7 @@ export default function createIntegration({
   let addr: AddressInfo;
   let srcDir: string;
   let pubDir: string;
+  let routes: IntegrationResolvedRoute[] = [];
 
   async function createDevTemplate(f: string) {
     const themePath = join(outDir, f);
@@ -89,14 +90,15 @@ eval('?>'. $__getDev() . '<?php');`;
         pubDir = fileURLToPath(config.publicDir);
         setAdapter({
           name: "astro-wordpress-adapter",
+          adapterFeatures: {
+            edgeMiddleware: false,
+            buildOutput: 'static',
+          },
           supportedAstroFeatures: {
             staticOutput: "stable",
             serverOutput: "unsupported",
             hybridOutput: "unsupported",
-            assets: {
-              isSharpCompatible: false,
-              isSquooshCompatible: false,
-            },
+            sharpImageService: "unsupported",
           },
         });
       },
@@ -174,29 +176,34 @@ eval('?>'. $__getDev() . '<?php');`;
 
         await createDevTemplates();
       },
-      "astro:build:done": async ({ dir: _dir, routes }) => {
+      "astro:routes:resolved": ({routes: _routes}) => {
+        routes = _routes
+      },
+      "astro:build:done": async ({ dir: _dir, assets }) => {
         const dir = fileURLToPath(_dir);
 
         await rm(outDir, { recursive: true, force: true });
         await rename(dir, outDir);
 
         for (const route of routes) {
-          const dist = route.distURL;
+          const dists = assets.get(route.pattern);
 
-          if (!dist) {
+          if (!dists) {
             continue;
           }
 
-          const path = fileURLToPath(dist);
+          for (const dist of dists) {
+            const path = fileURLToPath(dist);
 
-          if (route.type !== "page" || !path.endsWith(".php.html")) {
-            continue;
+            if (route.type !== "page" || !path.endsWith(".php.html")) {
+              continue;
+            }
+
+            const themePath = join(outDir, relative(dir, path));
+            const finalName = themePath.slice(0, -5);
+
+            await rename(themePath, finalName);
           }
-
-          const themePath = join(outDir, relative(dir, path));
-          const finalName = themePath.slice(0, -5);
-
-          await rename(themePath, finalName);
         }
       },
     },
