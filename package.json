@@ -1,6 +1,5 @@
 {
     "name": "@sijad/astro-wordpres",
-    "private": true,
     "scripts": {
         "clean": "rimraf -g \"packages/**/lib\" \"packages/**/*.tsbuildinfo\"",
         "compile": "tsc -b tsconfig.build.json",

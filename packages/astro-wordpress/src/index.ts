@@ -1,3 +1,4 @@
+/// <reference path="./php.d.ts" />
 import {
   mkdir,
   rename,
@@ -82,6 +83,22 @@ eval('?>'. $__getDev() . '<?php');`;
           build: {
             assetsPrefix: join("/wp-content/themes", outDir),
             format: "file",
+          },
+          vite: {
+            plugins: [
+              {
+                name: "php-as-text",
+                transform(src, id) {
+                  if (id.endsWith(".php")) {
+                    return {
+                      code: `import { markHTMLString } from 'astro/runtime/server/index.js';
+export default markHTMLString(${JSON.stringify(src)});`,
+                      map: null,
+                    };
+                  }
+                },
+              },
+            ],
           },
         });
       },
