@@ -81,7 +81,7 @@ eval('?>'. $__getDev());`;
         updateConfig({
           output: "static",
           build: {
-            assetsPrefix: join("/wp-content/themes", outDir),
+            assetsPrefix: join("/wp-content/themes", basename(outDir)),
             format: "file",
           },
           vite: {
