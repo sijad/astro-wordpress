@@ -49,7 +49,7 @@ $__getDev = function() {
   return file_get_contents($base . $path, false, $context);
 };
 
-eval('?>'. $__getDev() . '<?php');`;
+eval('?>'. $__getDev());`;
 
     await mkdir(dirname(themePath), { recursive: true });
     await writeFile(themePath, tempPhp, "utf8");
