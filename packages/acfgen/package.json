@@ -1,0 +1,18 @@
+{
+    "name": "acfgen",
+    "version": "0.0.3",
+    "description": "Strongly typed ACF PHP code generator",
+    "main": "lib/index.js",
+    "type": "module",
+    "scripts": {
+        "compile": "tsc"
+    },
+    "types": "lib/index.d.ts",
+    "keywords": [
+        "astro",
+        "wordpress",
+        "advanced custom field"
+    ],
+    "author": "sijad",
+    "license": "MIT"
+}
