@@ -39,58 +39,64 @@ export function createField<const T extends Field>(field: T): LocalField<T> {
 export function createGroup<T extends LocalField<Field>[]>(
   group: Group<T>,
 ): LocalGroup<T[number]["field"][]> {
-  const keyPrefix = `$_ACFG_${group.key}_`;
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function createProxy(path: string[]): any {
-    function fn() {
-      return path
-        .map((p, i) => (i === 0 ? `${keyPrefix}${p}` : `['${p}']`))
-        .join("");
-    }
-
-    return new Proxy(fn, {
-      get(_, prop) {
-        if (prop === "toString") {
-          return fn;
-        }
-
-        if (typeof prop === "string") {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-          return createProxy([...path, prop]);
-        }
-      },
-    });
-  }
-
   return {
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion, @typescript-eslint/no-explicit-any
-    phpVar: createProxy([]) as any,
-    getRegistrationCode() {
-      const fields = addKey(
-        group.key,
-        group.fields.map((f) => f.field),
-      );
-      const g = { ...group, fields };
+    getCode(postId = false, formatValue = true) {
+      const keyPrefix = `ACFG_${group.key}_${postId || ""}_`;
 
-      const str = `<?php
-acf_add_local_field_group(json_decode('${JSON.stringify(g)}', true));
-?>
-`;
-      return markHTMLString(str);
-    },
-    getFieldsCode(
-      postId: string | number | boolean = false,
-      formatValue = true,
-    ) {
-      const str = group.fields
-        .map(
-          (f) =>
-            `${keyPrefix}${f.field.name} = get_field('${f.field.name}', ${JSON.stringify(postId || false)}, ${formatValue ? "true" : "false"});`,
-        )
-        .join("\n");
+      function getRegisterCode() {
+        const fields = addKey(
+          group.key,
+          group.fields.map((f) => f.field),
+        );
+        const g = { ...group, fields };
+        const str = `if( function_exists('acf_add_local_field_group') ): acf_add_local_field_group(json_decode('${JSON.stringify(g)}', true)); endif;`;
+        return str;
+      }
 
-      return markHTMLString(`<?php ${str} ?>`);
+      function getFieldsCode() {
+        const str = group.fields
+          .map(
+            (f) =>
+              `$GLOBALS['${keyPrefix}${f.field.name}'] = get_field('${f.field.name}', ${JSON.stringify(postId || false)}, ${formatValue ? "true" : "false"});`,
+          )
+          .join("\n");
+
+        return `${postId}`.startsWith("option")
+          ? str
+          : `add_action('wp', function() { ${str} });`;
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      function createProxy(path: string[]): any {
+        function fn() {
+          return path
+            .map((p, i) =>
+              i === 0 ? `$GLOBALS['${keyPrefix}${p}']` : `['${p}']`,
+            )
+            .join("");
+        }
+
+        return new Proxy(fn, {
+          get(_, prop) {
+            if (prop === "toString") {
+              return fn;
+            }
+
+            if (typeof prop === "string") {
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+              return createProxy([...path, prop]);
+            }
+          },
+        });
+      }
+
+      return {
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion, @typescript-eslint/no-explicit-any
+        phpVars: createProxy([]) as any,
+        registerCode: markHTMLString(
+          `<?php ${getRegisterCode()} ${getFieldsCode()} ?>`,
+        ),
+      };
     },
   };
 }

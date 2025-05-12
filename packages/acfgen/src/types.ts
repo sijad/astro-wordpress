@@ -42,12 +42,13 @@ export interface LocalField<T extends Field> {
 }
 
 export interface LocalGroup<T extends Field[]> {
-  phpVar: FieldsToObject<T>;
-  getRegistrationCode(): string;
-  getFieldsCode(
+  getCode(
     postId?: string | number | boolean,
     formatValue?: boolean,
-  ): string;
+  ): {
+    phpVars: FieldsToObject<T>;
+    registerCode: string;
+  };
 }
 
 export interface Group<T extends LocalField<Field>[]> {
