@@ -44,7 +44,10 @@ export interface LocalField<T extends Field> {
 export interface LocalGroup<T extends Field[]> {
   phpVar: FieldsToObject<T>;
   getRegistrationCode(): string;
-  getFieldsCode(): string;
+  getFieldsCode(
+    postId?: string | number | boolean,
+    formatValue?: boolean,
+  ): string;
 }
 
 export interface Group<T extends LocalField<Field>[]> {

@@ -79,10 +79,14 @@ acf_add_local_field_group(json_decode('${JSON.stringify(g)}', true));
 `;
       return markHTMLString(str);
     },
-    getFieldsCode() {
+    getFieldsCode(
+      postId: string | number | boolean = false,
+      formatValue = true,
+    ) {
       const str = group.fields
         .map(
-          (f) => `${keyPrefix}${f.field.name} = get_field('${f.field.name}');`,
+          (f) =>
+            `${keyPrefix}${f.field.name} = get_field('${f.field.name}', ${JSON.stringify(postId || false)}, ${formatValue ? "true" : "false"});`,
         )
         .join("\n");
 
