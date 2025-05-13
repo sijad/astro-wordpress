@@ -1,0 +1,13 @@
+---
+import php from "./php";
+
+export interface Props {
+  of: string;
+}
+
+const { of } = Astro.props;
+---
+
+{php`<?php foreach(${of}): ?>`}
+<slot />
+{php`<?php endforeach; ?>`}

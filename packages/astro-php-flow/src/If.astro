@@ -1,0 +1,14 @@
+---
+import php from "./php";
+
+export interface Props {
+  test: string | string[];
+}
+
+const { test } = Astro.props;
+const tests = (Array.isArray(test) ? test : [test]).join(" && ");
+---
+
+{php`<?php if(${tests}): ?>`}
+<slot />
+{php`<?php endif; ?>`}
