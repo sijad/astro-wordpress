@@ -1,0 +1,13 @@
+---
+import php from "./php";
+
+export interface Props {
+  of: string;
+}
+
+const { of } = Astro.props;
+
+const html = (await Astro.slots.render("default")).trim();
+---
+
+{php`<?php switch(${of}): ?>${html}<?php endswitch; ?>`}

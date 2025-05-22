@@ -1,0 +1,24 @@
+---
+import php from "./php";
+
+type Case = {
+  of: string | string[];
+  default?: never;
+};
+
+type DefaultCase = {
+  default: true;
+  of?: never;
+};
+
+export type Props = Case | DefaultCase;
+
+const { of: _of, default: def } = Astro.props;
+
+const ofs = Array.isArray(_of) ? _of : [_of];
+const cases = def ? ["default:"] : ofs.map((o) => `case ${o}:`).join("\n");
+---
+
+{php`<?php ${cases} ?>`}
+<slot />
+{php`<?php break; ?>`}
