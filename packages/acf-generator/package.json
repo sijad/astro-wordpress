@@ -1,11 +1,16 @@
 {
     "name": "acf-generator",
-    "version": "0.0.5",
+    "version": "0.0.6",
     "description": "Strongly typed ACF PHP code generator",
     "main": "lib/index.js",
     "type": "module",
     "scripts": {
         "compile": "tsc"
+    },
+    "homepage": "https://github.com/sijad/astro-wordpress/tree/main/packages/acf-generator#readme"
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/sijad/astro-wordpress.git"
     },
     "types": "lib/index.d.ts",
     "keywords": [
