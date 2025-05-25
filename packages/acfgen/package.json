@@ -1,6 +1,6 @@
 {
     "name": "acfgen",
-    "version": "0.0.4",
+    "version": "0.0.5",
     "description": "Strongly typed ACF PHP code generator",
     "main": "lib/index.js",
     "type": "module",
