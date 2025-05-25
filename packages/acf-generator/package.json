@@ -7,7 +7,7 @@
     "scripts": {
         "compile": "tsc"
     },
-    "homepage": "https://github.com/sijad/astro-wordpress/tree/main/packages/acf-generator#readme"
+    "homepage": "https://github.com/sijad/astro-wordpress/tree/main/packages/acf-generator#readme",
     "repository": {
         "type": "git",
         "url": "git+https://github.com/sijad/astro-wordpress.git"
