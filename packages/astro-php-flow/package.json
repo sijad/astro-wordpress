@@ -1,6 +1,6 @@
 {
     "name": "astro-php-flow",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "description": "Utilities for easier use of PHP inside astro",
     "main": "src/index.js",
     "type": "module",
