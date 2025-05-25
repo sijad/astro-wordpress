@@ -1,21 +1,29 @@
-export type FieldToObject<F extends Field> = F extends {
-  type: "group";
-  sub_fields: infer Sub;
-}
-  ? F["name"] extends string
-    ? Record<F["name"], Sub extends Field[] ? FieldsToObject<Sub> : never>
-    : never
-  : F["name"] extends string
-    ? Record<F["name"], string>
-    : never;
+export type FieldToObject<F extends Field> =
+  // group
+  F extends {
+    type: "group";
+    sub_fields: infer Sub;
+  }
+    ? Record<
+        F["name"],
+        Sub extends Field[]
+          ? FieldsToObject<Sub> & { toString(): string }
+          : never
+      >
+    : // messages
+      F extends { type: "tab" } | { type: "message" } | { type: "accordion" }
+      ? never
+      : Record<F["name"], string>;
 
-export type FieldsToObject<T extends Field[]> = UnionToIntersection<
-  FieldToObject<T[number]>
->;
+type ExtractField<T> =
+  T extends LocalField<infer F> ? F : T extends Field ? T : never;
 
-export type UnionToIntersection<U> = (
-  U extends any ? (k: U) => void : never
-) extends (k: infer I) => void
+export type FieldsToObject<T extends readonly (LocalField<Field> | Field)[]> =
+  UnionToIntersection<FieldToObject<ExtractField<T[number]>>>;
+
+type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
+  k: infer I,
+) => void
   ? I
   : never;
 
@@ -41,7 +49,7 @@ export interface LocalField<T extends Field> {
   withSuffix<S extends string>(suffix: S): LocalField<ReplaceName<T, S>>;
 }
 
-export interface LocalGroup<T extends Field[]> {
+export interface LocalGroup<T extends readonly (LocalField<Field> | Field)[]> {
   getCode(
     postId?: string | number | boolean,
     formatValue?: boolean,
@@ -51,7 +59,7 @@ export interface LocalGroup<T extends Field[]> {
   };
 }
 
-export interface Group<T extends LocalField<Field>[]> {
+export interface Group<T extends readonly (LocalField<Field> | Field)[]> {
   key: string;
   title: string;
   fields: T;
