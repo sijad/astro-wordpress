@@ -39,6 +39,7 @@ $__getDev = function() {
   $context = stream_context_create([
     "http" => [
       "method" => "GET",
+      "ignore_errors" => true,
       "header" => "by-pass-proxy: 1\\r\\n"
     ]
   ]);
