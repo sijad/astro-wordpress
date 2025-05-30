@@ -13,7 +13,6 @@ import { fileURLToPath } from "node:url";
 
 import type { AstroIntegration, IntegrationResolvedRoute } from "astro";
 import glob from "fast-glob";
-import respModifier from "resp-modifier";
 
 import { rewriteLinksMiddleware } from "./utils.js";
 
@@ -154,11 +153,7 @@ export default markHTMLString(${JSON.stringify(src)});`,
           },
         };
 
-        const modifier = respModifier.create({
-          rules: [rewriteLinksMiddleware(new URL(devProxyTarget))],
-        });
-
-        server.middlewares.use(modifier.middleware);
+        server.middlewares.use(rewriteLinksMiddleware(new URL(devProxyTarget)));
 
         await rm(outDir, { recursive: true, force: true });
         await mkdir(outDir, { recursive: true });
