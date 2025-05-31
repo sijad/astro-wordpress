@@ -159,12 +159,11 @@ export default markHTMLString(${JSON.stringify(src)});`,
         await mkdir(outDir, { recursive: true });
 
         server.watcher.on("all", async (event, entry) => {
+          const relPath = relative(join(srcDir, "pages"), entry);
+
           // check if file is .php.astro and inside src/pages/
-          if (
-            entry.endsWith(".php.astro") &&
-            relative(join(srcDir, "pages"), entry) === basename(entry)
-          ) {
-            const phpPath = entry.slice(0, -6);
+          if (entry.endsWith(".php.astro") && relPath === basename(entry)) {
+            const phpPath = relPath.slice(0, -6);
 
             if (event === "add") {
               await createDevTemplate(phpPath);
