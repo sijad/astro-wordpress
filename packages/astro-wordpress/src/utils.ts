@@ -108,8 +108,9 @@ export function rewriteLinksMiddleware(userServer: URL) {
       }
 
       let content;
-      if (Buffer.isBuffer(list[0])) {
-        content = Buffer.concat(list);
+      const first = list[0] as any;
+      if (first && (Buffer.isBuffer(first) || first instanceof Uint8Array)) {
+        content = Buffer.concat(list).toString();
       } else {
         content = list.join("");
       }
