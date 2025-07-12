@@ -4,4 +4,6 @@ export { default as Else } from "./Else.astro";
 export { default as ElseIf } from "./ElseIf.astro";
 export { default as Switch } from "./Switch.astro";
 export { default as Case } from "./Case.astro";
+export { default as Break } from "./Break.astro";
+export { default as Continue } from "./Continue.astro";
 export { default as php, HTMLString } from "./php";

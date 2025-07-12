@@ -1,0 +1,11 @@
+---
+import php from "./php";
+
+export interface Props {
+  level: number;
+}
+
+const { level } = Astro.props;
+---
+
+{php`<?php break{level ? ` ${level}` : ""}; ?>`}
