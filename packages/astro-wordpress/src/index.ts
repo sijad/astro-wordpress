@@ -14,7 +14,11 @@ import { fileURLToPath } from "node:url";
 import type { AstroIntegration, IntegrationResolvedRoute } from "astro";
 import glob from "fast-glob";
 
-import { rewriteLinksMiddleware } from "./utils.js";
+import {
+  rewriteLinksModifier,
+  errorHandlerModifier,
+  modifyContentMiddleware,
+} from "./utils.js";
 
 interface Options {
   outDir?: string;
@@ -46,10 +50,29 @@ $__getDev = function() {
   $base = 'http://${addr.address}:${addr.port}';
   $path = '/${f}';
 
-  return file_get_contents($base . $path, false, $context);
+  $code = file_get_contents($base . $path, false, $context);
+
+  ob_start();
+
+  try {
+    eval('?>'. $code);
+  } catch(Throwable $e) {
+    ob_clean();
+    header('X-Error-AWP: 1');
+    status_header(500);
+    echo json_encode([
+      'message' => $e->getMessage(),
+      'file' => '${f}',
+      'line' => $e->getLine(),
+      'code' => $code,
+    ]);
+    return;
+  }
+
+  echo ob_get_clean();
 };
 
-eval('?>'. $__getDev());`;
+$__getDev();`;
 
     await mkdir(dirname(themePath), { recursive: true });
     await writeFile(themePath, tempPhp, "utf8");
@@ -153,7 +176,12 @@ export default markHTMLString(${JSON.stringify(src)});`,
           },
         };
 
-        server.middlewares.use(rewriteLinksMiddleware(new URL(devProxyTarget)));
+        server.middlewares.use(
+          modifyContentMiddleware([
+            rewriteLinksModifier(new URL(devProxyTarget)),
+            errorHandlerModifier(server.ws.send.bind(server.ws)),
+          ]),
+        );
 
         await rm(outDir, { recursive: true, force: true });
         await mkdir(outDir, { recursive: true });

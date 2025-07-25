@@ -106,9 +106,7 @@ export function createGroup<T extends (LocalField<Field> | Field)[]>(
           })
           .join("\n");
 
-        return postId === "option" || postId === "options"
-          ? str
-          : `add_action('wp', function() { ${str} });`;
+        return `add_action('acf/init', function() { ${str} });`;
       }
 
       return {
