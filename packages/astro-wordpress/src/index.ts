@@ -5,6 +5,7 @@ import {
   rm,
   symlink,
   unlink,
+  readFile,
   writeFile,
 } from "node:fs/promises";
 import type { AddressInfo } from "node:net";
@@ -18,6 +19,7 @@ import {
   rewriteLinksModifier,
   errorHandlerModifier,
   modifyContentMiddleware,
+  pageTemplateNameComment,
 } from "./utils.js";
 
 interface Options {
@@ -36,8 +38,11 @@ export default function createIntegration({
 
   async function createDevTemplate(f: string) {
     const themePath = join(outDir, f);
+    const templateNameComment = pageTemplateNameComment(f);
 
     const tempPhp = `<?php
+${templateNameComment}
+
 $__getDev = function() {
   $context = stream_context_create([
     "http" => [
@@ -243,6 +248,16 @@ export default markHTMLString(${JSON.stringify(src)});`,
             const finalName = themePath.slice(0, -5);
 
             await rename(themePath, finalName);
+
+            const templateNameComment = pageTemplateNameComment(
+              basename(finalName),
+            );
+
+            if (templateNameComment) {
+              const buf = Buffer.from(`<?php ${templateNameComment} ?>`);
+              const data = await readFile(finalName);
+              await writeFile(finalName, Buffer.concat([buf, data]));
+            }
           }
         }
       },

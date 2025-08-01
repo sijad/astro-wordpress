@@ -158,3 +158,21 @@ import myPhpCode from '../php-codes/my-code.php';
 <h2>My php code result:</h2>
 {myPhpCode}
 ```
+
+## Custom Page Template
+
+Due performance considerations, it's not currently possible to define custom page templates using the [traditional](https://developer.wordpress.org/themes/template-files-section/page-template-files/#creating-custom-page-templates-for-global-use) `/* Template Name: ... */` comment inside `.php.astro` files.
+
+To define a custom page template in your Astro project, prefix the route filename with `page-template-`. for example:
+
+```
+src/pages/page-template-my-custom-template.php.astro
+```
+
+the `Template Name` comment will be automatically injected, allowing WordPress to recognize it as a valid custom page template.
+
+**Resulting WordPress Template Name:**
+
+```php
+/* Template Name: My Custom Template */
+```

@@ -233,3 +233,18 @@ export function errorHandlerModifier(webSocketSend: (msg: unknown) => void) {
     return content;
   };
 }
+
+export function pageTemplateNameComment(fileName: string) {
+  function toTitleCase(str: string) {
+    str = str.replace(/[-_]/g, " ");
+    str = str.replace(/([a-z])([A-Z])/g, "$1 $2");
+    return str.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
+  }
+
+  if (fileName.startsWith("page-template-") && fileName.endsWith(".php")) {
+    const templateName = toTitleCase(fileName.slice(14, -4));
+    return `/* Template Name: ${templateName} */`;
+  }
+
+  return "";
+}
