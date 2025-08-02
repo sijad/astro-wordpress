@@ -221,13 +221,25 @@ export function errorHandlerModifier(webSocketSend: (msg: unknown) => void) {
     res: ServerResponse,
   ) {
     if (res.statusCode === 500 && res.hasHeader("X-Error-AWP")) {
-      const error = JSON.parse(content);
+      const startMarker = "/* awp-error-start */";
+      const endMarker = "/* awp-error-end */";
 
-      sendError(error).catch((e) => {
+      const startIndex = content.indexOf(startMarker);
+      const endIndex = content.indexOf(endMarker);
+
+      try {
+        const error = JSON.parse(
+          content.slice(startIndex + startMarker.length, endIndex),
+        );
+
+        sendError(error).catch((e) => {
+          console.log(e);
+        });
+
+        return `<title>PHP error</title><script type="module" src="/@vite/client"></script>`;
+      } catch (e) {
         console.log(e);
-      });
-
-      return `<title>PHP error</title><script type="module" src="/@vite/client"></script>`;
+      }
     }
 
     return content;

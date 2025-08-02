@@ -65,13 +65,15 @@ $__getDev = function() {
     ob_clean();
     header('X-Error-AWP: 1');
     status_header(500);
+    echo '/* awp-error-start */';
     echo json_encode([
       'message' => $e->getMessage(),
       'file' => '${f}',
       'line' => $e->getLine(),
       'code' => $code,
     ]);
-    return;
+    echo '/* awp-error-end */';
+    die;
   }
 
   echo ob_get_clean();
