@@ -21,6 +21,7 @@ type ExtractField<T> =
 export type FieldsToObject<T extends readonly (LocalField<Field> | Field)[]> =
   UnionToIntersection<FieldToObject<ExtractField<T[number]>>>;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
   k: infer I,
 ) => void

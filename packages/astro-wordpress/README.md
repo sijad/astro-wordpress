@@ -62,68 +62,67 @@ It allows you to create WordPress template files using `.php.astro` components u
 5. Create a php layout (e.g., `src/layouts/Layout.astro`)
 
    ```astro
-    <!doctype html>
-    <html
-      lang="<?php echo get_bloginfo( 'language' ); ?>"
-      dir="<?php echo is_rtl() ? 'rtl' : 'ltr'; ?>"
-    >
-      <head>
-        <meta charset={`<?php bloginfo( 'charset' ); ?>`} />
-        <meta http-equiv="x-ua-compatible" content="ie=edge" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <Fragment set:html={`<?php wp_head(); ?>`} />
-      </head>
-      <body class="<?php echo implode( ' ', get_body_class() ); ?>">
+   <!doctype html>
+   <html
+     lang="<?php echo get_bloginfo( 'language' ); ?>"
+     dir="<?php echo is_rtl() ? 'rtl' : 'ltr'; ?>"
+   >
+     <head>
+       <meta charset={`<?php bloginfo( 'charset' ); ?>`} />
+       <meta http-equiv="x-ua-compatible" content="ie=edge" />
+       <meta name="viewport" content="width=device-width, initial-scale=1" />
+       <Fragment set:html={`<?php wp_head(); ?>`} />
+     </head>
+     <body class="<?php echo implode( ' ', get_body_class() ); ?>">
+       <main>
+         <slot />
+       </main>
 
-        <main>
-          <slot />
-        </main>
-
-        <Fragment set:html={`<?php wp_footer(); ?>`} />
-      </body>
-    </html>
+       <Fragment set:html={`<?php wp_footer(); ?>`} />
+     </body>
+   </html>
    ```
 
 6. Add a index template `src/pages/index.php.astro`
 
    ```astro
-    ---
-    import Layout from "../layouts/Layout.astro";
-    ---
+   ---
+   import Layout from "../layouts/Layout.astro";
+   ---
 
-    <Layout>
-      <h1>
-        <a href={`<?php echo get_home_url(); ?>`}>
-          <Fragment set:html={`<?php bloginfo( 'name' ); ?>`} />
-        </a>
-      </h1>
+   <Layout>
+     <h1>
+       <a href={`<?php echo get_home_url(); ?>`}>
+         <Fragment set:html={`<?php bloginfo( 'name' ); ?>`} />
+       </a>
+     </h1>
 
-      <h2 set:html={`<?php bloginfo( 'description' ); ?>`} />
+     <h2 set:html={`<?php bloginfo( 'description' ); ?>`} />
 
-      <Fragment
-        set:html={`<?php
+     <Fragment
+       set:html={`<?php
           if (have_posts()) :
             while (have_posts()) : the_post(); ?>
               <h3><a href="<?php echo get_permalink(); ?>"><?php the_title(); ?></a></h3>
             <?php
               the_content();
               wp_link_pages();
-
+   
             endwhile;
-
+   
             if (get_next_posts_link()) {
               next_posts_link();
             }
-
+   
             if (get_previous_posts_link()) {
               previous_posts_link();
             };
-
+   
           else : ?>
             <p>No posts found. :(</p>
     <?php endif; ?>`}
-      />
-    </Layout>
+     />
+   </Layout>
    ```
 
 7. Start the dev server
@@ -152,7 +151,7 @@ You can import raw `.php` files into Astro components.
 
 ```astro
 ---
-import myPhpCode from '../php-codes/my-code.php';
+import myPhpCode from "../php-codes/my-code.php";
 ---
 
 <h2>My php code result:</h2>

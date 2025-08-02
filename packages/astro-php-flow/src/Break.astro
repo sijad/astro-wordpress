@@ -8,4 +8,4 @@ export interface Props {
 const { level } = Astro.props;
 ---
 
-{php`<?php break{level ? ` ${level}` : ""}; ?>`}
+{php`<?php break${level ? ` ${level}` : ""}; ?>`}

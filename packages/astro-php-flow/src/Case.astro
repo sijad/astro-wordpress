@@ -1,15 +1,15 @@
 ---
 import php from "./php";
 
-type Case = {
+interface Case {
   of: string | string[];
   default?: never;
-};
+}
 
-type DefaultCase = {
+interface DefaultCase {
   default: true;
   of?: never;
-};
+}
 
 export type Props = Case | DefaultCase;
 

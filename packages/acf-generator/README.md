@@ -56,9 +56,7 @@ import { heroHomeFields } from "./components/heroHome.astro";
 export const { registerCode: registerFrontPage, phpVars } = createGroup({
   key: "front_page",
   title: "Home Settings",
-  fields: [
-    heroHomeFields,
-  ],
+  fields: [heroHomeFields],
   hide_on_screen: ["the_content"],
   location: [
     [
@@ -71,28 +69,29 @@ export const { registerCode: registerFrontPage, phpVars } = createGroup({
   ],
 }).getCode();
 
-export const { registerCode: registerOptions, phpVars: optionsPhpVars } = createGroup({
-  key: "global_theme_options",
-  title: "Theme Settings",
-  fields: [
-    // you can also define a field without createField
-    {
-      label: "Footer Note",
-      name: "footer_note",
-      type: "link",
-    }
-  ] as const,
-  location: [
-    [
+export const { registerCode: registerOptions, phpVars: optionsPhpVars } =
+  createGroup({
+    key: "global_theme_options",
+    title: "Theme Settings",
+    fields: [
+      // you can also define a field without createField
       {
-        param: "options_page",
-        operator: "==",
-        value: "theme-options",
+        label: "Footer Note",
+        name: "footer_note",
+        type: "link",
       },
+    ] as const,
+    location: [
+      [
+        {
+          param: "options_page",
+          operator: "==",
+          value: "theme-options",
+        },
+      ],
     ],
-  ],
-  // first argument will be passed as $post_id to [get_field](https://www.advancedcustomfields.com/resources/get_field/)
-}).getCode("options");
+    // first argument will be passed as $post_id to [get_field](https://www.advancedcustomfields.com/resources/get_field/)
+  }).getCode("options");
 ```
 
 ### 3. Register Fields in Templates
@@ -114,7 +113,7 @@ export const partial = true;
 ### 4. Use phpVars in your templates
 
 ```ts
-import { phpVars, optionsPhpVars } from './fields.ts';
+import { phpVars, optionsPhpVars } from "./fields.ts";
 
 console.log(`<?php echo ${phpVars.hero_home.title}; ?>`);
 console.log(`<?php echo ${optionsPhpVars.footer_note}; ?>`);

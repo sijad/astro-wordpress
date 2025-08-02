@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/unbound-method */
-/* eslint-disable no-undef */
 import type { ShikiTransformer } from "shiki";
 import { codeToHtml, createCssVariablesTheme } from "shiki";
 import { IncomingMessage, ServerResponse } from "node:http";
