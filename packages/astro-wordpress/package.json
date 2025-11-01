@@ -1,6 +1,6 @@
 {
     "name": "astro-wordpress",
-    "version": "0.0.8",
+    "version": "0.0.9",
     "description": "Astro adapter to generate wordpress themes and php codes.",
     "main": "lib/index.js",
     "type": "module",
