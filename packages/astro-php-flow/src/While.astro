@@ -1,0 +1,13 @@
+---
+import php from "./php";
+
+export interface Props {
+  test: string;
+}
+
+const { test } = Astro.props;
+---
+
+{php`<?php while(${test}): ?>`}
+<slot />
+{php`<?php endwhile; ?>`}
