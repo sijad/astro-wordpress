@@ -1,0 +1,71 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { If, php } from "astro-php-flow";
+import PostTime from "../components/PostTime.astro";
+---
+
+<Layout>
+  <article>
+    <div class="hero-image">
+      <If test="has_post_thumbnail()">
+        {php`<?php the_post_thumbnail('full'); ?>`}
+      </If>
+    </div>
+    <div class="prose">
+      <div class="title">
+        <div class="date">
+          <PostTime />
+        </div>
+        <h1>{php`<?php the_title(); ?>`}</h1>
+        <hr />
+      </div>
+      {php`<?php the_content(); ?>`}
+    </div>
+  </article>
+</Layout>
+
+<style>
+  main {
+    width: calc(100% - 2em);
+    max-width: 100%;
+    margin: 0;
+  }
+  .hero-image {
+    width: 140%;
+    margin-left: -20%;
+    @media (max-width: 1280px) {
+      width: 120%;
+      margin-left: -10%;
+    }
+    @media (max-width: 1024px) {
+      width: 100%;
+      margin-left: 0;
+    }
+  }
+  .hero-image :global(img) {
+    display: block;
+    margin: 0 auto;
+    border-radius: 12px;
+    box-shadow: var(--box-shadow);
+  }
+  .prose {
+    width: 720px;
+    max-width: calc(100% - 2em);
+    margin: auto;
+    padding: 1em;
+    color: rgb(var(--gray-dark));
+  }
+  .title {
+    margin-bottom: 1em;
+    padding: 1em 0;
+    text-align: center;
+    line-height: 1;
+  }
+  .title h1 {
+    margin: 0 0 0.5em 0;
+  }
+  .date {
+    margin-bottom: 0.5em;
+    color: rgb(var(--gray));
+  }
+</style>

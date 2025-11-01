@@ -1,0 +1,34 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { If, While, Else, php } from "astro-php-flow";
+---
+
+<Layout>
+  <If test="have_posts()">
+    <While test="have_posts()">
+      {php`<?php the_post() ?>`}
+      <h2>
+        <a href={php`<?php echo get_permalink(); ?>`}>
+          {php`<?php the_title(); ?>`}
+        </a>
+      </h2>
+      {
+        php`<?php
+          the_content();
+          wp_link_pages();
+      ?>`
+      }
+    </While>
+
+    <If test="get_next_posts_link()">
+      {php`<?php next_posts_link(); ?>`}
+    </If>
+
+    <If test="get_previous_posts_link()">
+      {php`<?php previous_posts_link(); ?>`}
+    </If>
+
+    <Else />
+    <p>{php`<?php _e('No posts found. :(', 'astro-wordpress');`}</p>
+  </If>
+</Layout>

@@ -1,0 +1,31 @@
+---
+import { php } from "astro-php-flow";
+
+export const partial = true;
+---
+
+{
+  php`<?php
+
+  function aw_enqueue_styles() {
+    wp_enqueue_style('custom-fonts', get_stylesheet_directory_uri() . '/fonts.css');
+  }
+  add_action('wp_enqueue_scripts', 'aw_enqueue_styles');
+
+  function aw_init() {
+    register_nav_menus(
+      array(
+        'nav-main' => __( 'Main menu', 'astro-wordpress' ),
+      )
+    );
+  }
+  add_action( 'init', 'aw_init' );
+
+  function aw_theme_features() {
+    add_theme_support( 'post-thumbnails' );
+    add_theme_support( 'title-tag' );
+  }
+  add_action( 'after_setup_theme', 'aw_theme_features' );
+
+  ?>`
+}

@@ -1,0 +1,7 @@
+---
+import { php } from "astro-php-flow";
+---
+
+<time datetime={php`<?php echo get_the_modified_date('c'); ?>`}>
+  {php`<?php echo get_the_modified_date(); ?>`}
+</time>
