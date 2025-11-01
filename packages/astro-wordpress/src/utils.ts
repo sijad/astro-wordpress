@@ -4,6 +4,7 @@ import type { ShikiTransformer } from "shiki";
 import { codeToHtml, createCssVariablesTheme } from "shiki";
 import { IncomingMessage, ServerResponse } from "node:http";
 import { parse } from "node:url";
+import { AddressInfo, isIP } from "node:net";
 
 export function modifyContentMiddleware(
   modifiers: ((
@@ -258,4 +259,23 @@ export function pageTemplateNameComment(fileName: string) {
   }
 
   return "";
+}
+
+export function parseAddressInfo(urlStr: string): AddressInfo | undefined {
+  const url = new URL(urlStr);
+
+  if (!url.hostname) {
+    return;
+  }
+
+  const host = url.hostname;
+  const port = Number(url.port) || (url.protocol === "https:" ? 443 : 80);
+
+  const family = isIP(host) === 6 ? "IPv6" : "IPv4";
+
+  return {
+    address: host,
+    family,
+    port,
+  };
 }

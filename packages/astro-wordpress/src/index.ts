@@ -20,18 +20,25 @@ import {
   errorHandlerModifier,
   modifyContentMiddleware,
   pageTemplateNameComment,
+  parseAddressInfo,
 } from "./utils.js";
 
 interface Options {
   outDir?: string;
   devProxyTarget?: string;
+  publicDirPath?: string;
+  devServerTarget?: string;
 }
 
 export default function createIntegration({
   outDir = "./theme/",
   devProxyTarget,
+  publicDirPath,
+  devServerTarget,
 }: Options = {}): AstroIntegration {
-  let addr: AddressInfo;
+  let addr: AddressInfo | undefined = devServerTarget
+    ? parseAddressInfo(devServerTarget)
+    : undefined;
   let srcDir: string;
   let pubDir: string;
   let routes: IntegrationResolvedRoute[] = [];
@@ -52,7 +59,7 @@ $__getDev = function() {
     ]
   ]);
 
-  $base = 'http://${addr.address}:${addr.port}';
+  $base = 'http://${addr!.address}:${addr!.port}';
   $path = '/${f}';
 
   $code = file_get_contents($base . $path, false, $context);
@@ -97,8 +104,12 @@ $__getDev();`;
 
     const pubFiles = await glob(join(pubDir, "*"), { onlyFiles: false });
     pubFiles.forEach((f) => {
-      const themePath = join(outDir, basename(f));
-      promises.push(symlink(f, themePath));
+      const fileName = basename(f);
+      const themePath = join(outDir, fileName);
+
+      promises.push(
+        symlink(publicDirPath ? join(publicDirPath, fileName) : f, themePath),
+      );
     });
 
     await Promise.all(promises);
@@ -165,6 +176,11 @@ export default markHTMLString(${JSON.stringify(src)});`,
           changeOrigin: true,
           autoRewrite: true,
           secure: false,
+          configure: (proxy) => {
+            proxy.on("proxyReq", (proxyReq) => {
+              proxyReq.removeHeader("Accept-Encoding");
+            });
+          },
           bypass(req) {
             const url = req.url;
 
@@ -211,7 +227,10 @@ export default markHTMLString(${JSON.stringify(src)});`,
           ) {
             const themePath = join(outDir, basename(entry));
             if (event === "add" || event === "addDir") {
-              await symlink(entry, themePath);
+              await symlink(
+                publicDirPath ? join(publicDirPath, basename(entry)) : entry,
+                themePath,
+              );
             } else if (event === "unlink" || event === "unlinkDir") {
               await unlink(themePath);
             }
@@ -219,7 +238,9 @@ export default markHTMLString(${JSON.stringify(src)});`,
         });
       },
       "astro:server:start": async ({ address }) => {
-        addr = address;
+        if (!addr) {
+          addr = address;
+        }
 
         await createDevTemplates();
       },
