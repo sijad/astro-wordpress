@@ -1,8 +1,7 @@
+const htmlStringSymbol = Symbol.for("astro:html-string");
+
 export class HTMLString extends String {
-  // eslint-disable-next-line @typescript-eslint/class-literal-property-style
-  get [Symbol.toStringTag]() {
-    return "HTMLString";
-  }
+  [htmlStringSymbol] = true;
 }
 
 export default function php(strings, ...values) {

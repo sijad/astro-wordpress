@@ -9,10 +9,10 @@
         "astro": "astro"
     },
     "dependencies": {
-        "@astrojs/mdx": "^4.3.9",
-        "@astrojs/rss": "^4.0.13",
-        "@astrojs/sitemap": "^3.6.0",
-        "astro": "^5.15.3",
+        "@astrojs/mdx": "^6.0.2",
+        "@astrojs/rss": "^4.0.18",
+        "@astrojs/sitemap": "^3.7.3",
+        "astro": "^6.4.4",
         "astro-php-flow": "file:../../packages/astro-php-flow",
         "astro-wordpress": "file:../../packages/astro-wordpress",
         "sharp": "^0.34.3"

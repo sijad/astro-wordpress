@@ -1,6 +1,6 @@
 {
     "name": "astro-wordpress",
-    "version": "0.0.9",
+    "version": "0.1.0",
     "description": "Astro adapter to generate wordpress themes and php codes.",
     "main": "lib/index.js",
     "type": "module",
@@ -16,11 +16,11 @@
     "author": "sijad",
     "license": "MIT",
     "dependencies": {
-        "@types/node": "^20.0.0",
-        "fast-glob": "^3.3.2",
-        "shiki": "^3.8.1"
+        "@types/node": "^22.19.0",
+        "fast-glob": "^3.3.3",
+        "shiki": "^4.0.2"
     },
     "devDependencies": {
-        "typescript": "5.3.3"
+        "typescript": "6.0.3"
     }
 }

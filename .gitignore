@@ -72,3 +72,5 @@ src/env.d.ts
 .astro
 demo/theme/
 /starters/*/wp/*
+
+.DS_Store

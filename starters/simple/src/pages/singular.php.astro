@@ -8,15 +8,16 @@ import PostTime from "../components/PostTime.astro";
   <If test="have_posts()">
     <While test="have_posts()">
       {php`<?php the_post() ?>`}
-      <a href={php`<?php echo get_permalink(); ?>`}>
-        <If test="has_post_thumbnail()">
-          {php`<?php the_post_thumbnail('full'); ?>`}
-        </If>
-        <h4 class="title">{php`<?php the_title(); ?>`}</h4>
-        <p class="date">
-          <PostTime />
-        </p>
-      </a>
+      <If test="has_post_thumbnail()">
+        {php`<?php the_post_thumbnail('full'); ?>`}
+      </If>
+      <h4 class="title">{php`<?php the_title(); ?>`}</h4>
+      <p class="date">
+        <PostTime />
+      </p>
+      <div class="prose">
+        {php`<?php the_content(); ?>`}
+      </div>
     </While>
   </If>
 </Layout>
@@ -57,9 +58,6 @@ import PostTime from "../components/PostTime.astro";
     padding: 1em 0;
     text-align: center;
     line-height: 1;
-  }
-  .title h1 {
-    margin: 0 0 0.5em 0;
   }
   .date {
     margin-bottom: 0.5em;

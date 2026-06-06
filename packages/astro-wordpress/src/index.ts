@@ -148,6 +148,7 @@ export default markHTMLString(${JSON.stringify(src)});`,
         pubDir = fileURLToPath(config.publicDir);
         setAdapter({
           name: "astro-wordpress-adapter",
+          entrypointResolution: "auto",
           adapterFeatures: {
             edgeMiddleware: false,
             buildOutput: "static",

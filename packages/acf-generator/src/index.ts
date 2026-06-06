@@ -1,11 +1,11 @@
-export type * from "./types";
+export type * from "./types.js";
 import type {
   Field,
   FieldsToObject,
   Group,
   LocalField,
   LocalGroup,
-} from "./types";
+} from "./types.js";
 
 export class HTMLString extends String {
   // eslint-disable-next-line @typescript-eslint/class-literal-property-style
