@@ -17,10 +17,7 @@ npm install acf-generator
 Define fields using the `createField` utility. Compose single fields or nested structures:
 
 ```ts
-import {
-  type GroupFieldVarsPath,
-  createField
-} from "acf-generator";
+import { type GroupFieldVarsPath, createField } from "acf-generator";
 
 export const heroHomeFields = createField({
   type: "group",
@@ -141,14 +138,10 @@ const { vars } = Astro.props;
 <section>
   <h1>{vars.title}</h1>
 
-  {when`${vars.text}`(
-    <p>{vars.text}</p>
-  )}
+  {when`${vars.text}`(<p>{vars.text}</p>)}
 
   <ul>
-    {vars.ctas.map((cta) => (
-      <a href={cta.link.url}>{cta.link.title}</a>
-    ))}
+    {vars.ctas.map((cta) => <a href={cta.link.url}>{cta.link.title}</a>)}
   </ul>
 </section>
 ```
