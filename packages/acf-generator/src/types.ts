@@ -1,19 +1,26 @@
+import type { PathNode } from "astro-stencil";
+
 export type FieldToObject<F extends Field> =
   // group
   F extends {
     type: "group";
     sub_fields: infer Sub;
   }
-    ? Record<
-        F["name"],
-        Sub extends Field[]
-          ? FieldsToObject<Sub> & { toString(): string }
-          : never
-      >
-    : // messages
-      F extends { type: "tab" } | { type: "message" } | { type: "accordion" }
-      ? never
-      : Record<F["name"], string>;
+    ? Record<F["name"], Sub extends Field[] ? FieldsToObject<Sub> : never>
+    : // repeater
+      F extends {
+          type: "repeater";
+          sub_fields: infer Sub;
+        }
+      ? Record<F["name"], Sub extends Field[] ? FieldsToObject<Sub>[] : never>
+      : // messages
+        F extends { type: "tab" } | { type: "message" } | { type: "accordion" }
+        ? never
+        : // link
+          F extends { type: "link"; return_format?: "array" }
+          ? Record<F["name"], { url: string; title: string; target: string }>
+          : // everything else
+            Record<F["name"], string>;
 
 type ExtractField<T> =
   T extends LocalField<infer F> ? F : T extends Field ? T : never;
@@ -50,12 +57,22 @@ export interface LocalField<T extends Field> {
   withSuffix<S extends string>(suffix: S): LocalField<ReplaceName<T, S>>;
 }
 
+export type FieldVarsPath<T extends LocalField<Field> | Field> = PathNode<
+  FieldToObject<ExtractField<T>>
+>;
+
+export type GroupFieldVarsPath<
+  T extends
+    | LocalField<GroupField | RepeaterField>
+    | (GroupField | RepeaterField),
+> = PathNode<FieldsToObject<ExtractField<T>["sub_fields"]>>;
+
 export interface LocalGroup<T extends readonly (LocalField<Field> | Field)[]> {
   getCode(
     postId?: string | number | boolean,
     formatValue?: boolean,
   ): {
-    phpVars: FieldsToObject<T>;
+    phpVars: PathNode<FieldsToObject<T>>;
     registerCode: string;
   };
 }

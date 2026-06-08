@@ -1,6 +1,6 @@
 # acf-generator
 
-A php code generator for WordPress [Advanced Custom Fields (ACF)](https://www.advancedcustomfields.com/).
+A type-safe code generator for WordPress [Advanced Custom Fields (ACF)](https://www.advancedcustomfields.com/).
 
 ## Installation
 
@@ -8,8 +8,6 @@ Install via npm or yarn:
 
 ```bash
 npm install acf-generator
-# or
-yarn add acf-generator
 ```
 
 ## Basic Usage
@@ -19,7 +17,10 @@ yarn add acf-generator
 Define fields using the `createField` utility. Compose single fields or nested structures:
 
 ```ts
-import { createField } from "acf-generator";
+import {
+  type GroupFieldVarsPath,
+  createField
+} from "acf-generator";
 
 export const heroHomeFields = createField({
   type: "group",
@@ -37,12 +38,23 @@ export const heroHomeFields = createField({
       label: "Text",
     },
     {
-      type: "link",
-      name: "cta",
-      label: "CTA",
+      type: "repeater",
+      name: "ctas",
+      label: "CTAs",
+      layout: "block",
+      max: 2,
+      sub_fields: [
+        {
+          type: "link",
+          name: "link",
+          label: "Link",
+        },
+      ],
     },
   ],
 });
+
+export type FieldsPath = GroupFieldVarsPath<typeof fields>;
 ```
 
 ### 2. Create a Field Group
@@ -51,7 +63,7 @@ Generate the group and its PHP registration code with `createGroup`:
 
 ```ts
 import { createGroup } from "acf-generator";
-import { heroHomeFields } from "./components/heroHome.astro";
+import { heroHomeFields } from "./components/heroHome.fields.ts";
 
 export const { registerCode: registerFrontPage, phpVars } = createGroup({
   key: "front_page",
@@ -110,11 +122,33 @@ export const partial = true;
 {registerFrontPage}
 ```
 
-### 4. Use phpVars in your templates
+### 4. Use Generated Variables
 
-```ts
-import { phpVars, optionsPhpVars } from "./fields.ts";
+This package uses [astro-stencil](https://github.com/sijad/astro-stencil/tree/main/packages/astro-stencil) internally, so generated field variables can be used directly in your Astro templates with full type safety.
 
-console.log(`<?php echo ${phpVars.hero_home.title}; ?>`);
-console.log(`<?php echo ${optionsPhpVars.footer_note}; ?>`);
+```astro
+---
+import type { FieldsPath } from "./components/heroHome.fields.ts";
+import { when } from "astro-stencil/php";
+
+interface Props {
+  vars: FieldsPath;
+}
+
+const { vars } = Astro.props;
+---
+
+<section>
+  <h1>{vars.title}</h1>
+
+  {when`${vars.text}`(
+    <p>{vars.text}</p>
+  )}
+
+  <ul>
+    {vars.ctas.map((cta) => (
+      <a href={cta.link.url}>{cta.link.title}</a>
+    ))}
+  </ul>
+</section>
 ```

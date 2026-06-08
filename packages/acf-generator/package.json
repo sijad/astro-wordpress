@@ -1,6 +1,6 @@
 {
     "name": "acf-generator",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "description": "Strongly typed ACF PHP code generator",
     "main": "lib/index.js",
     "type": "module",
@@ -19,5 +19,8 @@
         "advanced custom field"
     ],
     "author": "sijad",
-    "license": "MIT"
+    "license": "MIT",
+    "dependencies": {
+        "astro-stencil": "^0.0.6"
+    }
 }
