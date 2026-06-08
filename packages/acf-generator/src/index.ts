@@ -43,36 +43,6 @@ export function createField<const T extends Field>(field: T): LocalField<T> {
   };
 }
 
-function variables<T extends readonly (LocalField<Field> | Field)[]>(
-  fields: T,
-  prefix = "['",
-): FieldsToObject<T> {
-  const vars = fields.reduce(
-    (o, c) => {
-      const field = "field" in c ? c.field : c;
-      const name = field.name;
-
-      const value = new String(`${prefix}${name}']`);
-      o[name] = value;
-
-      if (field.type === "group" && "sub_fields" in field) {
-        Object.assign(
-          // eslint-disable-next-line @typescript-eslint/no-wrapper-object-types
-          o[name] as String,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          variables(field.sub_fields as any, `${value.toString()}['`),
-        );
-      }
-
-      return o;
-    },
-
-    {} as Record<string, unknown>,
-  );
-
-  return vars as FieldsToObject<T>;
-}
-
 export function createGroup<T extends (LocalField<Field> | Field)[]>(
   group: Group<T>,
 ): LocalGroup<T> {
