@@ -1,26 +1,26 @@
 {
     "name": "acf-generator",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "description": "Strongly typed ACF PHP code generator",
-    "main": "lib/index.js",
-    "type": "module",
-    "scripts": {
-        "compile": "tsc"
-    },
+    "keywords": [
+        "advanced custom field",
+        "astro",
+        "wordpress"
+    ],
     "homepage": "https://github.com/sijad/astro-wordpress/tree/main/packages/acf-generator#readme",
+    "license": "MIT",
+    "author": "sijad",
     "repository": {
         "type": "git",
         "url": "git+https://github.com/sijad/astro-wordpress.git"
     },
+    "type": "module",
+    "main": "lib/index.js",
     "types": "lib/index.d.ts",
-    "keywords": [
-        "astro",
-        "wordpress",
-        "advanced custom field"
-    ],
-    "author": "sijad",
-    "license": "MIT",
+    "scripts": {
+        "compile": "tsc"
+    },
     "dependencies": {
-        "astro-stencil": "^0.0.6"
+        "astro-stencil": "^0.0.7"
     }
 }
