@@ -6,7 +6,7 @@ This adapter enables you to build WordPress themes using [Astro](https://astro.b
 It allows you to create WordPress template files using `.php.astro` components under the `pages/` directory.
 
 > [!TIP]
-> This repo ships [Agent Skills](https://github.com/anthropics/skills) covering common astro-wordpress workflows. Install them into your project with:
+> This repo ships Agent Skills covering common astro-wordpress workflows. Install them into your project with:
 >
 > ```bash
 > npx skills add sijad/astro-wordpress --all
