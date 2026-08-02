@@ -182,3 +182,44 @@ the `Template Name` comment will be automatically injected, allowing WordPress t
 ```php
 /* Template Name: My Custom Template */
 ```
+
+## Using Skills
+
+This repo ships Agent Skills covering common astro-wordpress workflows. Install all of them into your project:
+
+```bash
+npx skills add sijad/astro-wordpress --all
+```
+
+Or install a single skill:
+
+```bash
+npx skills add sijad/astro-wordpress/skills/astro-wordpress-acf
+```
+
+Available skills:
+
+| Skill | Use it for |
+| --- | --- |
+| `astro-wordpress` | Converting a static Astro template into a WordPress theme (adapter setup, `astro.config.mjs`, `style.css`, `.php.astro` pages) |
+| `astro-wordpress-acf` | Wiring a component to Advanced Custom Fields so it's editable from the WP backoffice |
+| `astro-wordpress-global-settings` | Adding a site-wide "Theme Options" page via ACF or SCF options pages |
+| `astro-wordpress-menus` | Connecting a nav component to a WordPress-managed menu (`register_nav_menus()` / `wp_nav_menu()`) |
+
+Once installed, the agent picks the right skill from your prompt — no need to name it explicitly. For example:
+
+```
+> turn this Astro site into a WordPress theme
+```
+
+```
+> make the hero section on the homepage editable from WP admin
+```
+
+```
+> add a theme options page with a footer phone number field
+```
+
+```
+> hook up the header nav to a WordPress menu
+```

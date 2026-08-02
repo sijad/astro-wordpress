@@ -279,6 +279,22 @@ curl -b cookies.txt "http://localhost:8088/wp-admin/" | grep -o "<title>[^<]*</t
   own `<head>` independently (common when porting an existing static
   template), treat wiring those in as a deliberate follow-up, not something
   this skill's steps already give you.
+- **`astro check` (part of `npm run build`) can OOM-crash** trying to
+  type-check the WordPress core files that land in `./wp` once the
+  container starts (thousands of `.js`/`.php` files under
+  `wp-includes/js/dist/`, etc.). Add `"exclude": ["dist", "wp"]` to
+  `tsconfig.json` before running a build with Docker WP already up —
+  otherwise the failure looks like an unrelated Node heap crash with no
+  obvious connection to the WordPress adapter.
+- **Biome (or any linter/formatter run over the whole repo) will also try
+  to process `./wp`** once it exists, for the same reason — add an ignore
+  entry (e.g. `"files": { "ignore": ["wp/**"] }` in `biome.json`) before
+  running the project's lint/format command.
+- **Dynamic rest-param routes don't convert.** `src/pages/blog/[...slug].astro`
+  (or any `[...x].astro`) cannot become `[...x].php.astro` — Astro's router
+  rejects it outright ("rest parameter must be a standalone segment") because
+  the `.php` suffix breaks the segment boundary. leave those routes as plain `.astro`
+  and out of the WP theme, unless the content itself is being migrated into WP
 
 ## Next step
 

@@ -433,3 +433,15 @@ doctype) — that's the code that actually ships.
   template — escaping that turns real paragraphs into visible `&lt;p&gt;`
   text. Use `.displayUnescaped` for those specific fields; leave everything
   else on the escaped default.
+- **A shared component with a strictly-typed prop (e.g. `interface Props
+  { url: string }`) rejects a `phpVars` link/field value at `astro
+  check`** with `Type 'PathTerminal' is not assignable to type 'string'`
+  — the recipe's own `<Button url={vars.cta.url} />` example only
+  type-checks cleanly when that component's prop is loosely/untyped.
+  Don't loosen a shared component's prop type just to accommodate ACF
+  wiring (it's used by plenty of call sites that pass real strings) —
+  cast at the ACF call site instead, the same `as unknown as` escape
+  hatch used in step 6: `url={vars.cta.url as unknown as string}`. This
+  is expected and safe: the proxy still stringifies to the right PHP echo
+  when Astro renders it, the cast only silences a type-checker that has
+  no way to know that.
