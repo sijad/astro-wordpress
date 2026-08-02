@@ -24,11 +24,15 @@ export type FieldToObject<F extends Field> =
             ? Record<F["name"], AcfImage[]>
             : // link
               F extends { type: "link"; return_format?: "array" }
-              ? Record<F["name"], { url: string; title: string; target: string }>
+              ? Record<
+                  F["name"],
+                  { url: string; title: string; target: string }
+                >
               : // everything else
                 Record<F["name"], string>;
 
-type ExtractField<T> = T extends LocalField<infer F> ? F : T extends Field ? T : never;
+type ExtractField<T> =
+  T extends LocalField<infer F> ? F : T extends Field ? T : never;
 
 export interface AcfImage {
   id: number;
@@ -56,12 +60,13 @@ export interface AcfImage {
   sizes: Record<string, string | number>;
 }
 
-export type FieldsToObject<T extends readonly (LocalField<Field> | Field)[]> = UnionToIntersection<
-  FieldToObject<ExtractField<T[number]>>
->;
+export type FieldsToObject<T extends readonly (LocalField<Field> | Field)[]> =
+  UnionToIntersection<FieldToObject<ExtractField<T[number]>>>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void
+type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
+  k: infer I,
+) => void
   ? I
   : never;
 
@@ -92,7 +97,9 @@ export type FieldVarsPath<T extends LocalField<Field> | Field> = PathNode<
 >;
 
 export type GroupFieldVarsPath<
-  T extends LocalField<GroupField | RepeaterField> | (GroupField | RepeaterField),
+  T extends
+    | LocalField<GroupField | RepeaterField>
+    | (GroupField | RepeaterField),
 > = PathNode<FieldsToObject<ExtractField<T>["sub_fields"]>>;
 
 export interface LocalGroup<T extends readonly (LocalField<Field> | Field)[]> {
@@ -174,7 +181,15 @@ interface Wrapper {
 
 interface FieldCondition {
   field: string;
-  operator: "==" | "!=" | "==pattern" | "==contains" | ">" | "<" | "==empty" | "!=empty";
+  operator:
+    | "=="
+    | "!="
+    | "==pattern"
+    | "==contains"
+    | ">"
+    | "<"
+    | "==empty"
+    | "!=empty";
   value: string;
 }
 
@@ -368,7 +383,13 @@ export interface LinkField extends FieldBase {
 export interface PostObjectField extends FieldBase {
   type: "post_object";
   post_type?: "post" | "page" | "attachment" | (string & {});
-  post_status?: "publish" | "future" | "draft" | "pending" | "private" | (string & {});
+  post_status?:
+    | "publish"
+    | "future"
+    | "draft"
+    | "pending"
+    | "private"
+    | (string & {});
   taxonomy?: string;
   return_format?: "object" | "id";
   multiple?: boolean;
@@ -379,7 +400,13 @@ export interface PostObjectField extends FieldBase {
 export interface PageLinkField extends FieldBase {
   type: "page_link";
   post_type?: "post" | "page" | "attachment" | (string & {});
-  post_status?: "publish" | "future" | "draft" | "pending" | "private" | (string & {});
+  post_status?:
+    | "publish"
+    | "future"
+    | "draft"
+    | "pending"
+    | "private"
+    | (string & {});
   taxonomy?: string;
   allow_archives?: boolean;
   multiple?: boolean;
@@ -389,7 +416,13 @@ export interface PageLinkField extends FieldBase {
 export interface RelationshipField extends FieldBase {
   type: "relationship";
   post_type?: "post" | "page" | "attachment" | (string & {});
-  post_status?: "publish" | "future" | "draft" | "pending" | "private" | (string & {});
+  post_status?:
+    | "publish"
+    | "future"
+    | "draft"
+    | "pending"
+    | "private"
+    | (string & {});
   taxonomy?: string;
   filters?: "search" | "post_type" | "taxonomy";
   return_format?: "object" | "id";
@@ -413,7 +446,13 @@ export interface TaxonomyField extends FieldBase {
 
 export interface UserField extends FieldBase {
   type: "user";
-  role?: "administrator" | "editor" | "author" | "contributor" | "subscriber" | (string & {});
+  role?:
+    | "administrator"
+    | "editor"
+    | "author"
+    | "contributor"
+    | "subscriber"
+    | (string & {});
   return_format?: "array" | "object" | "id";
   multiple?: boolean;
   allow_null?: boolean;
@@ -436,8 +475,18 @@ export interface DatePickerField extends FieldBase {
 
 export interface DateTimePickerField extends FieldBase {
   type: "date_time_picker";
-  display_format?: "d/m/Y g:i a" | "m/d/Y g:i a" | "F j, Y g:i a" | "Y-m-d H:i:s" | (string & {});
-  return_format?: "d/m/Y g:i a" | "m/d/Y g:i a" | "F j, Y g:i a" | "Y-m-d H:i:s" | (string & {});
+  display_format?:
+    | "d/m/Y g:i a"
+    | "m/d/Y g:i a"
+    | "F j, Y g:i a"
+    | "Y-m-d H:i:s"
+    | (string & {});
+  return_format?:
+    | "d/m/Y g:i a"
+    | "m/d/Y g:i a"
+    | "F j, Y g:i a"
+    | "Y-m-d H:i:s"
+    | (string & {});
 }
 
 export interface TimePickerField extends FieldBase {

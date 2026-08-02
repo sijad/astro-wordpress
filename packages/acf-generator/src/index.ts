@@ -1,5 +1,11 @@
 import { createDataSource } from "astro-stencil/php";
-import type { Field, FieldsToObject, Group, LocalField, LocalGroup } from "./types.js";
+import type {
+  Field,
+  FieldsToObject,
+  Group,
+  LocalField,
+  LocalGroup,
+} from "./types.js";
 
 export type * from "./types.js";
 
@@ -70,7 +76,8 @@ export function createGroup<T extends (LocalField<Field> | Field)[]>(
           })
           .join("\n");
 
-        const hook = postId === "option" || postId === "options" ? "acf/init" : "wp";
+        const hook =
+          postId === "option" || postId === "options" ? "acf/init" : "wp";
 
         return `add_action('${hook}', function() { $GLOBALS['${keyPrefix}'] = []; ${str} });`;
       }
@@ -79,7 +86,9 @@ export function createGroup<T extends (LocalField<Field> | Field)[]>(
 
       return {
         phpVars: data,
-        registerCode: markHTMLString(`<?php ${getRegisterCode()} ${getFieldsCode()} ?>`),
+        registerCode: markHTMLString(
+          `<?php ${getRegisterCode()} ${getFieldsCode()} ?>`,
+        ),
       };
     },
   };
