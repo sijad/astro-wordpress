@@ -43,7 +43,7 @@ export function createField<const T extends Field>(field: T): LocalField<T> {
   };
 }
 
-export function createGroup<T extends (LocalField<Field> | Field)[]>(
+export function createGroup<const T extends (LocalField<Field> | Field)[]>(
   group: Group<T>,
 ): LocalGroup<T> {
   let isRegistered = false;
