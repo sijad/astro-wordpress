@@ -1,20 +1,20 @@
 {
     "name": "astro-wordpress",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "Astro adapter to generate wordpress themes and php codes.",
-    "main": "lib/index.js",
+    "keywords": [
+        "astro-adapter",
+        "astro-component",
+        "wordpress"
+    ],
+    "license": "MIT",
+    "author": "sijad",
     "type": "module",
+    "main": "lib/index.js",
+    "types": "lib/index.d.ts",
     "scripts": {
         "compile": "tsc"
     },
-    "types": "lib/index.d.ts",
-    "keywords": [
-        "astro-component",
-        "astro-adapter",
-        "wordpress"
-    ],
-    "author": "sijad",
-    "license": "MIT",
     "dependencies": {
         "@types/node": "^22.19.0",
         "fast-glob": "^3.3.3",
