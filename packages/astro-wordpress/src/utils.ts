@@ -38,26 +38,40 @@ export function modifyContentMiddleware(
       return writeHead.apply(res, args as any);
     };
 
-    res.write = function (chunk) {
-      list.push(chunk);
+    res.write = function (chunk: any, encoding?: any, callback?: any) {
+      list.push(
+        typeof chunk === "string"
+          ? Buffer.from(
+              chunk,
+              typeof encoding === "string"
+                ? (encoding as BufferEncoding)
+                : "utf8",
+            )
+          : Buffer.from(chunk),
+      );
+      const done = typeof encoding === "function" ? encoding : callback;
+      if (done) process.nextTick(done);
       return true;
     };
 
-    res.end = function (chunk?: any, encoding?: any) {
+    res.end = function (chunk?: any, encoding?: any, callback?: any) {
       const contentType = res.getHeader("content-type")?.toString() || "";
       const isHtml = contentType.startsWith("text/html");
 
-      if (chunk) {
-        list.push(chunk);
+      if (chunk != null && typeof chunk !== "function") {
+        list.push(
+          typeof chunk === "string"
+            ? Buffer.from(
+                chunk,
+                typeof encoding === "string"
+                  ? (encoding as BufferEncoding)
+                  : "utf8",
+              )
+            : Buffer.from(chunk),
+        );
       }
 
-      let content: Buffer | string;
-      const first = list[0] as any;
-      if (first && (Buffer.isBuffer(first) || first instanceof Uint8Array)) {
-        content = Buffer.concat(list);
-      } else {
-        content = list.join("");
-      }
+      let content: Buffer | string = Buffer.concat(list);
 
       if (isHtml) {
         content = content.toString();
@@ -68,10 +82,16 @@ export function modifyContentMiddleware(
       }
 
       if (!res.headersSent) {
-        res.setHeader("content-length", content.length);
+        res.setHeader("content-length", Buffer.byteLength(content));
       }
 
-      return end.call(res, content, encoding);
+      const done =
+        typeof chunk === "function"
+          ? chunk
+          : typeof encoding === "function"
+            ? encoding
+            : callback;
+      return end.call(res, content, "utf8", done);
     };
 
     return next();
