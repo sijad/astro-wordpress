@@ -13,7 +13,8 @@
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
     "scripts": {
-        "compile": "tsc"
+        "compile": "tsc",
+        "test": "npm run compile && node --test test/*.test.js"
     },
     "dependencies": {
         "@types/node": "^22.19.0",

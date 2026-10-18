@@ -1,97 +1,85 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/unbound-method */
 import type { ShikiTransformer } from "shiki";
 import { codeToHtml, createCssVariablesTheme } from "shiki";
 import { IncomingMessage, ServerResponse } from "node:http";
-import { parse } from "node:url";
 import { AddressInfo, isIP } from "node:net";
 
 export function modifyContentMiddleware(
-  modifiers: ((
-    content: string,
-    req: IncomingMessage,
-    res: ServerResponse,
-  ) => string)[],
+  modifiers: ((content: string, req: IncomingMessage, res: ServerResponse) => string)[],
 ) {
-  const clReg = /content-length/i;
-
   return (req: IncomingMessage, res: ServerResponse, next: () => void) => {
-    const end = res.end;
-    const writeHead = res.writeHead;
-    const list: Buffer[] = [];
+    const end = res.end.bind(res);
+    const write = res.write.bind(res);
+    const writeHead = res.writeHead.bind(res);
+    const chunks: Buffer[] = [];
+    let ending = false;
+    const isHtml = () =>
+      /^text\/html(?:\s*;|$)/i.test(res.getHeader("content-type")?.toString() || "");
+    const toBuffer = (chunk: string | Uint8Array, encoding: BufferEncoding) =>
+      typeof chunk === "string" ? Buffer.from(chunk, encoding) : Buffer.from(chunk);
 
-    res.writeHead = function (...args) {
-      const headers = args[args.length - 1] as any;
-
-      if (typeof headers === "object") {
-        for (const name in headers) {
-          if (clReg.test(name)) {
-            delete headers[name];
+    res.writeHead = function (statusCode, statusMessageOrHeaders?, headers?) {
+      const suppliedHeaders =
+        typeof statusMessageOrHeaders === "string" ? headers : statusMessageOrHeaders;
+      if (Array.isArray(suppliedHeaders)) {
+        const seen = new Set<string>();
+        for (let i = 0; i < suppliedHeaders.length; i += 2) {
+          const name = suppliedHeaders[i];
+          if (seen.has(name.toLowerCase())) {
+            res.appendHeader(name, suppliedHeaders[i + 1]);
+          } else {
+            res.setHeader(name, suppliedHeaders[i + 1]);
+            seen.add(name.toLowerCase());
           }
         }
+      } else if (suppliedHeaders) {
+        for (const [name, value] of Object.entries(suppliedHeaders)) {
+          if (value !== undefined) res.setHeader(name, value);
+        }
       }
-
-      if (res.getHeader("content-length")) {
-        res.removeHeader("content-length");
-      }
-
-      return writeHead.apply(res, args as any);
+      if (isHtml() && !ending) res.removeHeader("content-length");
+      return typeof statusMessageOrHeaders === "string"
+        ? writeHead(statusCode, statusMessageOrHeaders)
+        : writeHead(statusCode);
     };
 
-    res.write = function (chunk: any, encoding?: any, callback?: any) {
-      list.push(
-        typeof chunk === "string"
-          ? Buffer.from(
-              chunk,
-              typeof encoding === "string"
-                ? (encoding as BufferEncoding)
-                : "utf8",
-            )
-          : Buffer.from(chunk),
-      );
-      const done = typeof encoding === "function" ? encoding : callback;
+    res.write = function (
+      chunk: string | Uint8Array,
+      encodingOrCallback?: BufferEncoding | ((error?: Error | null) => void),
+      callback?: (error?: Error | null) => void,
+    ) {
+      const encoding = typeof encodingOrCallback === "string" ? encodingOrCallback : "utf8";
+      const done = typeof encodingOrCallback === "function" ? encodingOrCallback : callback;
+      if (!isHtml()) return write(chunk, encoding, done);
+      chunks.push(toBuffer(chunk, encoding));
       if (done) process.nextTick(done);
       return true;
     };
 
-    res.end = function (chunk?: any, encoding?: any, callback?: any) {
-      const contentType = res.getHeader("content-type")?.toString() || "";
-      const isHtml = contentType.startsWith("text/html");
-
-      if (chunk != null && typeof chunk !== "function") {
-        list.push(
-          typeof chunk === "string"
-            ? Buffer.from(
-                chunk,
-                typeof encoding === "string"
-                  ? (encoding as BufferEncoding)
-                  : "utf8",
-              )
-            : Buffer.from(chunk),
-        );
-      }
-
-      let content: Buffer | string = Buffer.concat(list);
-
-      if (isHtml) {
-        content = content.toString();
-
-        modifiers.forEach((fn) => {
-          content = fn(content as string, req, res);
-        });
-      }
-
-      if (!res.headersSent) {
-        res.setHeader("content-length", Buffer.byteLength(content));
-      }
-
+    res.end = function (
+      chunk?: string | Uint8Array | (() => void) | null,
+      encodingOrCallback?: BufferEncoding | (() => void),
+      callback?: () => void,
+    ) {
+      const encoding = typeof encodingOrCallback === "string" ? encodingOrCallback : "utf8";
       const done =
         typeof chunk === "function"
           ? chunk
-          : typeof encoding === "function"
-            ? encoding
+          : typeof encodingOrCallback === "function"
+            ? encodingOrCallback
             : callback;
-      return end.call(res, content, "utf8", done);
+      const data = typeof chunk === "function" ? undefined : chunk;
+      if (!isHtml() && chunks.length === 0) {
+        return data == null ? end(done) : end(data, encoding, done);
+      }
+      if (data != null) chunks.push(toBuffer(data, encoding));
+      let content = Buffer.concat(chunks).toString("utf8");
+      for (const modifier of modifiers) content = modifier(content, req, res);
+      chunks.length = 0;
+      if (!res.headersSent) {
+        res.setHeader("content-length", Buffer.byteLength(content));
+      }
+      ending = true;
+      return end(content, "utf8", done);
     };
 
     return next();
@@ -99,67 +87,22 @@ export function modifyContentMiddleware(
 }
 
 export function rewriteLinksModifier(userServer: URL) {
-  const host = userServer.hostname;
-  let string = host;
-  const port = userServer.port;
-
-  if (host && port) {
-    if (parseInt(port, 10) !== 80) {
-      string = host + ":" + port;
-    }
-  }
-
+  const host = userServer.host.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const boundary = String.raw`(?=$|[/?#\\\s"'<> ,])`;
   const reg = new RegExp(
-    // a simple, but exact match
-    "https?:\\\\/\\\\/" +
-      string +
-      "|" +
-      // following ['"] + exact
-      "('|\")\\/\\/" +
-      string +
-      "|" +
-      // exact match with optional trailing slash
-      "https?://" +
-      string +
-      "(?!:)(/)?" +
-      "|" +
-      // following ['"] + exact + possible multiple (imr srcset etc)
-      "('|\")(https?://|/|\\.)?" +
-      string +
-      "(?!:)(/)?(.*?)(?=[ ,'\"\\s])",
-    "g",
+    `(https?:\\/\\/|https?:\\\\/\\\\/|["'](?://|\\\\/\\\\/|/)?|["']\\.)${host}${boundary}`,
+    "gi",
   );
 
   return function modify(content: string, req: IncomingMessage) {
-    const url = req.headers["host"] || "";
-
-    return content.replaceAll(reg, (match) => {
-      if (match[0] === ".") {
-        return match;
+    const target = req.headers.host;
+    if (!target) return content;
+    return content.replace(reg, (match: string, prefix: string) => {
+      if (prefix.endsWith(".")) return match;
+      if (/^https?:/i.test(prefix)) {
+        return prefix.includes("\\") ? `\\/\\/${target}` : `//${target}`;
       }
-
-      const captured = match[0] === "'" || match[0] === '"' ? match[0] : "";
-
-      if (match[0] === "'" || match[0] === '"') {
-        match = match.slice(1);
-      }
-
-      const out = parse(match);
-
-      if (!out.host) {
-        string = string.replace(/^\//, "");
-        return captured + match.replace(string, url);
-      }
-
-      if (out.path === "/") {
-        if (match.slice(-1) === "/") {
-          out.path = "/";
-        } else {
-          out.path = "";
-        }
-      }
-
-      return [captured, "//", url, out.path, out.hash || ""].join("");
+      return prefix + target;
     });
   };
 }
@@ -191,12 +134,7 @@ export function errorHandlerModifier(webSocketSend: (msg: unknown) => void) {
     };
   }
 
-  async function sendError(err: {
-    message: string;
-    line: number;
-    code: string;
-    file: string;
-  }) {
+  async function sendError(err: { message: string; line: number; code: string; file: string }) {
     const [name, message] = err.message.includes(",")
       ? err.message.split(",")
       : ["Runtime Error", err.message];
@@ -218,9 +156,7 @@ export function errorHandlerModifier(webSocketSend: (msg: unknown) => void) {
           theme,
           transformers: [
             transformerCompactLineOptions(
-              err.line
-                ? [{ line: err.line, classes: ["error-line"] }]
-                : undefined,
+              err.line ? [{ line: err.line, classes: ["error-line"] }] : undefined,
             ),
           ],
         }),
@@ -235,11 +171,7 @@ export function errorHandlerModifier(webSocketSend: (msg: unknown) => void) {
     setTimeout(() => webSocketSend(payload), 200);
   }
 
-  return function modify(
-    content: string,
-    _req: IncomingMessage,
-    res: ServerResponse,
-  ) {
+  return function modify(content: string, _req: IncomingMessage, res: ServerResponse) {
     if (res.statusCode === 500 && res.hasHeader("X-Error-AWP")) {
       const startMarker = "/* awp-error-start */";
       const endMarker = "/* awp-error-end */";
@@ -248,9 +180,7 @@ export function errorHandlerModifier(webSocketSend: (msg: unknown) => void) {
       const endIndex = content.indexOf(endMarker);
 
       try {
-        const error = JSON.parse(
-          content.slice(startIndex + startMarker.length, endIndex),
-        );
+        const error = JSON.parse(content.slice(startIndex + startMarker.length, endIndex));
 
         sendError(error).catch((e) => {
           console.log(e);
