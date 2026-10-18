@@ -103,6 +103,8 @@ export const { registerCode: registerOptions, phpVars: optionsPhpVars } =
   }).getCode("options");
 ```
 
+Each `getCode()` call returns complete registration code, so calls can be used independently in separate templates. Generating code does not modify the supplied field definitions.
+
 ### 3. Register Fields in Templates
 
 With [astro-wordpress](https://github.com/sijad/astro-wordpress), you can register the generated fields inside `functions.php.astro` or a `.php.astro` file and include it in your `functions.php`:

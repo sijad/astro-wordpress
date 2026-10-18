@@ -19,17 +19,20 @@ const markHTMLString = (value: string) => {
   return new HTMLString(value) as unknown as string;
 };
 
-function addKey(prefix: string, fields: readonly Field[]): Field[] {
-  return fields.map((f) => {
-    if ("sub_fields" in f) {
-      f.sub_fields = addKey(`${prefix}_${f.name}`, f.sub_fields);
-    }
+function phpLiteral(value: string | number | boolean): string {
+  return typeof value === "string"
+    ? `'${value.replaceAll("\\", "\\\\").replaceAll("'", "\\'")}'`
+    : JSON.stringify(value);
+}
 
-    return {
-      key: `${prefix}_${f.name}`,
-      ...f,
-    };
-  });
+function addKey(prefix: string, fields: readonly Field[]): Field[] {
+  return fields.map((field) => ({
+    ...field,
+    key: `${prefix}_${field.name}`,
+    ...("sub_fields" in field
+      ? { sub_fields: addKey(`${prefix}_${field.name}`, field.sub_fields) }
+      : {}),
+  }));
 }
 
 export function createField<const T extends Field>(field: T): LocalField<T> {
@@ -46,40 +49,32 @@ export function createField<const T extends Field>(field: T): LocalField<T> {
 export function createGroup<const T extends (LocalField<Field> | Field)[]>(
   group: Group<T>,
 ): LocalGroup<T> {
-  let isRegistered = false;
-
   return {
     getCode(postId = false, formatValue = true) {
       const keyPrefix = `ACFG_${group.key}${postId ? `_${postId}` : ""}`;
 
       function getRegisterCode() {
-        if (isRegistered) {
-          return "";
-        }
-
-        isRegistered = true;
-
         const fields = addKey(
           group.key,
           group.fields.map((f) => ("field" in f ? f.field : f)),
         );
 
         const g = { ...group, fields };
-        return `if( function_exists('acf_add_local_field_group') ): acf_add_local_field_group(json_decode('${JSON.stringify(g)}', true)); endif;`;
+        return `if( function_exists('acf_add_local_field_group') ): acf_add_local_field_group(json_decode(${phpLiteral(JSON.stringify(g))}, true)); endif;`;
       }
 
       function getFieldsCode() {
         const str = group.fields
           .map((f) => {
             const name = "field" in f ? f.field.name : f.name;
-            return `if ( ! is_admin() ) { $GLOBALS['${keyPrefix}']['${name}'] = get_field('${name}', ${JSON.stringify(postId || false)}, ${formatValue ? "true" : "false"}); }`;
+            return `if ( ! is_admin() ) { $GLOBALS[${phpLiteral(keyPrefix)}][${phpLiteral(name)}] = get_field(${phpLiteral(name)}, ${phpLiteral(postId)}, ${formatValue ? "true" : "false"}); }`;
           })
           .join("\n");
 
         const hook =
           postId === "option" || postId === "options" ? "acf/init" : "wp";
 
-        return `add_action('${hook}', function() { $GLOBALS['${keyPrefix}'] = []; ${str} });`;
+        return `add_action('${hook}', function() { $GLOBALS[${phpLiteral(keyPrefix)}] = []; ${str} });`;
       }
 
       const data = createDataSource<FieldsToObject<T>>(["GLOBALS", keyPrefix]);
