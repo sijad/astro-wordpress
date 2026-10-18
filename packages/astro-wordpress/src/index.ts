@@ -1,13 +1,5 @@
 /// <reference path="./php.d.ts" />
-import {
-  mkdir,
-  rename,
-  rm,
-  symlink,
-  unlink,
-  readFile,
-  writeFile,
-} from "node:fs/promises";
+import { mkdir, rename, rm, symlink, unlink, readFile, writeFile } from "node:fs/promises";
 import type { AddressInfo } from "node:net";
 import { basename, dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -15,13 +7,8 @@ import { fileURLToPath } from "node:url";
 import type { AstroIntegration, IntegrationResolvedRoute } from "astro";
 import glob from "fast-glob";
 
-import {
-  rewriteLinksModifier,
-  errorHandlerModifier,
-  modifyContentMiddleware,
-  pageTemplateNameComment,
-  parseAddressInfo,
-} from "./utils.js";
+import { errorHandlerModifier, pageTemplateNameComment, parseAddressInfo } from "./utils.js";
+import { createHostRewriteModifier, createHtmlTransformMiddleware } from "proxy-html-rewrite";
 
 interface Options {
   outDir?: string;
@@ -94,9 +81,7 @@ $__getDev();`;
 
   async function createDevTemplates() {
     const phpAstroFiles = await glob(join(srcDir, "pages/**/*.php.astro"));
-    const templates = phpAstroFiles.map((f) =>
-      relative(join(srcDir, "/pages"), f).slice(0, -6),
-    );
+    const templates = phpAstroFiles.map((f) => relative(join(srcDir, "/pages"), f).slice(0, -6));
 
     const promises = templates.map(async (f) => {
       await createDevTemplate(f);
@@ -107,9 +92,7 @@ $__getDev();`;
       const fileName = basename(f);
       const themePath = join(outDir, fileName);
 
-      promises.push(
-        symlink(publicDirPath ? join(publicDirPath, fileName) : f, themePath),
-      );
+      promises.push(symlink(publicDirPath ? join(publicDirPath, fileName) : f, themePath));
     });
 
     await Promise.all(promises);
@@ -201,8 +184,8 @@ export default markHTMLString(${JSON.stringify(src)});`,
         };
 
         server.middlewares.use(
-          modifyContentMiddleware([
-            rewriteLinksModifier(new URL(devProxyTarget)),
+          createHtmlTransformMiddleware([
+            createHostRewriteModifier(new URL(devProxyTarget)),
             errorHandlerModifier(server.ws.send.bind(server.ws)),
           ]),
         );
@@ -273,9 +256,7 @@ export default markHTMLString(${JSON.stringify(src)});`,
 
             await rename(themePath, finalName);
 
-            const templateNameComment = pageTemplateNameComment(
-              basename(finalName),
-            );
+            const templateNameComment = pageTemplateNameComment(basename(finalName));
 
             if (templateNameComment) {
               const buf = Buffer.from(`<?php ${templateNameComment} ?>`);

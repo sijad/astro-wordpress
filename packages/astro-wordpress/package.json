@@ -19,6 +19,7 @@
     "dependencies": {
         "@types/node": "^22.19.0",
         "fast-glob": "^3.3.3",
+        "proxy-html-rewrite": "^0.1.0",
         "shiki": "^4.0.2"
     },
     "devDependencies": {
