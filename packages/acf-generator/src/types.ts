@@ -109,6 +109,8 @@ export interface LocalGroup<T extends readonly (LocalField<Field> | Field)[]> {
   ): {
     phpVars: PathNode<FieldsToObject<T>>;
     registerCode: string;
+    /** Tag-free PHP for composing a single functions.php block. */
+    registerBody: string;
   };
 }
 

@@ -1,4 +1,4 @@
-import { createDataSource } from "astro-stencil/php";
+import { createDataProxy } from "astro-stencil";
 import type {
   Field,
   FieldsToObject,
@@ -19,7 +19,12 @@ const markHTMLString = (value: string) => {
   return new HTMLString(value) as unknown as string;
 };
 
-function phpLiteral(value: string | number | boolean): string {
+function phpLiteral(value: unknown): string {
+  if (value === null || value === undefined) return "null";
+  if (Array.isArray(value)) return `[${value.map(phpLiteral).join(", ")}]`;
+  if (typeof value === "object") {
+    return `[${Object.entries(value).filter(([, v]) => v !== undefined).map(([k, v]) => `${phpLiteral(k)} => ${phpLiteral(v)}`).join(", ")}]`;
+  }
   return typeof value === "string"
     ? `'${value.replaceAll("\\", "\\\\").replaceAll("'", "\\'")}'`
     : JSON.stringify(value);
@@ -33,6 +38,42 @@ function addKey(prefix: string, fields: readonly Field[]): Field[] {
       ? { sub_fields: addKey(`${prefix}_${field.name}`, field.sub_fields) }
       : {}),
   }));
+}
+
+// Shared counter keeps nested loops and separate groups from reusing variables.
+let iterationId = 0;
+
+function createFieldSource<T>(fields: readonly Field[], postId: string | number | boolean, formatValue: boolean) {
+  const root = "__acf_field_source";
+  const fieldNames = new Set(fields.filter((field) => !["tab", "message", "accordion"].includes(field.type)).map((field) => field.name));
+  const renderer = {
+    variableRef(path: string[]): string {
+      if (path[0] !== root) {
+        return `$${path[0]}${path.slice(1).map((key) => `[${phpLiteral(key)}]`).join("")}`;
+      }
+      const [, name, ...nested] = path;
+      if (!name || !fieldNames.has(name)) {
+        throw new Error("Read a value field from phpVars; whole groups and presentation fields have no value expression.");
+      }
+      return `get_field(${phpLiteral(name)}, ${phpLiteral(postId)}, ${phpLiteral(formatValue)})${nested.map((key) => `[${phpLiteral(key)}]`).join("")}`;
+    },
+    displayEscaped(path: string[]): string {
+      return `<?php echo htmlspecialchars(${this.variableRef(path)}); ?>`;
+    },
+    displayUnescaped(path: string[]): string {
+      return `<?php echo ${this.variableRef(path)}; ?>`;
+    },
+    iteration(path: string[]): [string, string, string, string] {
+      const id = iterationId++;
+      const item = `acfg_item_${id}`;
+      const index = `acfg_index_${id}`;
+      return [`<?php foreach(${this.variableRef(path)} as $${index} => $${item}): ?>`, item, index, "<?php endforeach; ?>"];
+    },
+    arrayLength(path: string[]): string {
+      return `count(${this.variableRef(path)})`;
+    },
+  };
+  return createDataProxy<T>(renderer, [root]);
 }
 
 export function createField<const T extends Field>(field: T): LocalField<T> {
@@ -51,8 +92,6 @@ export function createGroup<const T extends (LocalField<Field> | Field)[]>(
 ): LocalGroup<T> {
   return {
     getCode(postId = false, formatValue = true) {
-      const keyPrefix = `ACFG_${group.key}${postId ? `_${postId}` : ""}`;
-
       function getRegisterCode() {
         const fields = addKey(
           group.key,
@@ -60,29 +99,17 @@ export function createGroup<const T extends (LocalField<Field> | Field)[]>(
         );
 
         const g = { ...group, fields };
-        return `if( function_exists('acf_add_local_field_group') ): acf_add_local_field_group(json_decode(${phpLiteral(JSON.stringify(g))}, true)); endif;`;
+        return `if( function_exists('acf_add_local_field_group') ): acf_add_local_field_group(${phpLiteral(g)}); endif;`;
       }
 
-      function getFieldsCode() {
-        const str = group.fields
-          .map((f) => {
-            const name = "field" in f ? f.field.name : f.name;
-            return `if ( ! is_admin() ) { $GLOBALS[${phpLiteral(keyPrefix)}][${phpLiteral(name)}] = get_field(${phpLiteral(name)}, ${phpLiteral(postId)}, ${formatValue ? "true" : "false"}); }`;
-          })
-          .join("\n");
-
-        const hook =
-          postId === "option" || postId === "options" ? "acf/init" : "wp";
-
-        return `add_action('${hook}', function() { $GLOBALS[${phpLiteral(keyPrefix)}] = []; ${str} });`;
-      }
-
-      const data = createDataSource<FieldsToObject<T>>(["GLOBALS", keyPrefix]);
-
+      const fields = group.fields.map((f) => "field" in f ? f.field : f);
+      const data = createFieldSource<FieldsToObject<T>>(fields, postId, formatValue);
+      const registerBody = getRegisterCode();
       return {
         phpVars: data,
+        registerBody,
         registerCode: markHTMLString(
-          `<?php ${getRegisterCode()} ${getFieldsCode()} ?>`,
+          `<?php ${registerBody} ?>`,
         ),
       };
     },
