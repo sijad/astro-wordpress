@@ -1,6 +1,6 @@
 {
     "name": "acf-generator",
-    "version": "0.2.5",
+    "version": "0.3.0",
     "description": "Strongly typed ACF PHP code generator",
     "keywords": [
         "advanced custom field",
@@ -17,6 +17,12 @@
     "type": "module",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./lib/index.d.ts",
+            "default": "./lib/index.js"
+        }
+    },
     "scripts": {
         "compile": "tsc",
         "test": "npm run compile && node --test test/*.test.js"

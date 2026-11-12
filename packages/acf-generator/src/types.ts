@@ -1,38 +1,49 @@
 import type { PathNode } from "astro-stencil";
 
-export type FieldToObject<F extends Field> =
-  // group
-  F extends {
-    type: "group";
-    sub_fields: infer Sub;
-  }
-    ? Record<F["name"], Sub extends Field[] ? FieldsToObject<Sub> : never>
-    : // repeater
-      F extends {
-          type: "repeater";
-          sub_fields: infer Sub;
-        }
-      ? Record<F["name"], Sub extends Field[] ? FieldsToObject<Sub>[] : never>
-      : // messages
-        F extends { type: "tab" } | { type: "message" } | { type: "accordion" }
-        ? never
-        : // image
-          F extends { type: "image"; return_format?: "array" }
-          ? Record<F["name"], AcfImage>
-          : // gallery
-            F extends { type: "gallery"; return_format?: "array" }
-            ? Record<F["name"], AcfImage[]>
-            : // link
-              F extends { type: "link"; return_format?: "array" }
-              ? Record<
-                  F["name"],
-                  { url: string; title: string; target: string }
-                >
-              : // everything else
-                Record<F["name"], string>;
+/** Declared formatted field shape. ACF values, including empty values, are not normalized. */
+export type FieldValue<F extends Field> = F extends {
+  type: "group";
+  sub_fields: infer S extends readonly Field[];
+}
+  ? FieldsToObject<S>
+  : F extends { type: "repeater"; sub_fields: infer S extends readonly Field[] }
+    ? FieldsToObject<S>[]
+    : F extends { type: "number" | "range" }
+      ? number
+      : F extends { type: "true_false" }
+        ? boolean
+        : F extends { type: "image" | "file" }
+          ? F extends { return_format: "id" }
+            ? number
+            : F extends { return_format: "url" }
+              ? string
+              : (F extends { type: "file" } ? AcfFile : AcfImage) | false
+          : F extends { type: "gallery" }
+            ? F extends { return_format: "id" }
+              ? number[]
+              : F extends { return_format: "url" }
+                ? string[]
+                : AcfImage[]
+            : F extends { type: "link" }
+              ? F extends { return_format: "url" }
+                ? string
+                : { url: string; title: string; target: string } | false
+              : F extends {
+                    type: "select" | "checkbox" | "radio" | "button_group";
+                  }
+                ? F extends { type: "checkbox" } | { multiple: true }
+                  ? ChoiceValue<F>[]
+                  : ChoiceValue<F>
+                : string;
+
+type ChoiceValue<F> = F extends { return_format: "array" }
+  ? { value: string; label: string }
+  : string;
 
 type ExtractField<T> =
   T extends LocalField<infer F> ? F : T extends Field ? T : never;
+
+export type AcfFile = Omit<AcfImage, "width" | "height" | "sizes">;
 
 export interface AcfImage {
   id: number;
@@ -60,15 +71,14 @@ export interface AcfImage {
   sizes: Record<string, string | number>;
 }
 
-export type FieldsToObject<T extends readonly (LocalField<Field> | Field)[]> =
-  UnionToIntersection<FieldToObject<ExtractField<T[number]>>>;
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
-  k: infer I,
-) => void
-  ? I
-  : never;
+export type FieldsToObject<T extends readonly (LocalField<Field> | Field)[]> = {
+  [F in ExtractField<T[number]> as F["type"] extends
+    | "tab"
+    | "message"
+    | "accordion"
+    ? never
+    : F["name"]]: FieldValue<F>;
+};
 
 interface FieldBase {
   type: string;
@@ -92,24 +102,21 @@ export interface LocalField<T extends Field> {
   withSuffix<S extends string>(suffix: S): LocalField<ReplaceName<T, S>>;
 }
 
-export type FieldVarsPath<T extends LocalField<Field> | Field> = PathNode<
-  FieldToObject<ExtractField<T>>
->;
-
-export type GroupFieldVarsPath<
-  T extends
-    | LocalField<GroupField | RepeaterField>
-    | (GroupField | RepeaterField),
-> = PathNode<FieldsToObject<ExtractField<T>["sub_fields"]>>;
-
 export interface LocalGroup<T extends readonly (LocalField<Field> | Field)[]> {
+  readonly group: Group<T>;
+  /** ACF post ID values are read from, such as "options"; false reads the current post. */
+  readonly postId: string | number | boolean;
+  /** The same group, read from another post, such as "options". */
+  source(postId: string | number | boolean): LocalGroup<T>;
+  /** `postId` defaults to the group's source. */
   getCode(
     postId?: string | number | boolean,
     formatValue?: boolean,
   ): {
     phpVars: PathNode<FieldsToObject<T>>;
+    /** PHP-tagged field group registration. */
     registerCode: string;
-    /** Tag-free PHP for composing a single functions.php block. */
+    /** The same registration without PHP tags, for joining into a PHP file. */
     registerBody: string;
   };
 }
@@ -118,7 +125,8 @@ export interface Group<T extends readonly (LocalField<Field> | Field)[]> {
   key: string;
   title: string;
   fields: T;
-  location: LocationCondition[][];
+  /** Where the group shows. xph-wordpress fills it in for groups exported from a template. */
+  location?: LocationCondition[][];
   active?: boolean;
   hide_on_screen?: (
     | "permalink"
@@ -198,7 +206,7 @@ interface FieldCondition {
 export interface GroupField extends FieldBase {
   type: "group";
   layout?: "block" | "table" | "row";
-  sub_fields: Field[];
+  sub_fields: readonly Field[];
 }
 
 interface RepeaterField extends FieldBase {
@@ -210,11 +218,11 @@ interface RepeaterField extends FieldBase {
   max?: number;
   button_label?: string;
   collapsed?: string;
-  sub_fields: Field[];
+  sub_fields: readonly Field[];
 }
 
 interface FlexibleLayout extends FieldBase {
-  sub_fields: Field[];
+  sub_fields: readonly Field[];
   display?: "table" | "block" | "row";
   min?: number;
   max?: number;

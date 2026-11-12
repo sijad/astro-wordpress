@@ -17,7 +17,8 @@ npm install acf-generator
 Define fields using the `createField` utility. Compose single fields or nested structures:
 
 ```ts
-import { type GroupFieldVarsPath, createField } from "acf-generator";
+import type { PathNode } from "astro-stencil";
+import { type FieldsToObject, createField } from "acf-generator";
 
 export const heroHomeFields = createField({
   type: "group",
@@ -51,7 +52,10 @@ export const heroHomeFields = createField({
   ],
 });
 
-export type FieldsPath = GroupFieldVarsPath<typeof fields>;
+// The type of `phpVars.hero_home`, for typing a component's props.
+export type FieldsPath = PathNode<
+  FieldsToObject<typeof heroHomeFields.field.sub_fields>
+>;
 ```
 
 ### 2. Create a Field Group
@@ -147,3 +151,8 @@ const { vars } = Astro.props;
   </ul>
 </section>
 ```
+
+## Using xph
+
+[xph-wordpress](https://github.com/sijad/xph/tree/main/packages/xph-wordpress) registers
+groups defined with `createGroup` and loads their values in xph components.

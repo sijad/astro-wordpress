@@ -42,7 +42,8 @@ live page through the dev proxy, and the same PHP present in the production
 there become routes):
 
 ```ts
-import { createField, type GroupFieldVarsPath } from "acf-generator";
+import type { PathNode } from "astro-stencil";
+import { createField, type FieldsToObject } from "acf-generator";
 
 export const heroFields = createField({
   type: "group",
@@ -55,7 +56,8 @@ export const heroFields = createField({
   ],
 });
 
-export type HeroVars = GroupFieldVarsPath<typeof heroFields>;
+// The type of `phpVars.hero` (the group's sub-fields), for the component's props.
+export type HeroVars = PathNode<FieldsToObject<typeof heroFields.field.sub_fields>>;
 ```
 
 Full field-type list (text, image, repeater, flexible_content,
