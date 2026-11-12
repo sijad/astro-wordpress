@@ -30,7 +30,12 @@ export function errorHandlerModifier(webSocketSend: (msg: unknown) => void) {
     };
   }
 
-  async function sendError(err: { message: string; line: number; code: string; file: string }) {
+  async function sendError(err: {
+    message: string;
+    line: number;
+    code: string;
+    file: string;
+  }) {
     const [name, message] = err.message.includes(",")
       ? err.message.split(",")
       : ["Runtime Error", err.message];
@@ -52,7 +57,9 @@ export function errorHandlerModifier(webSocketSend: (msg: unknown) => void) {
           theme,
           transformers: [
             transformerCompactLineOptions(
-              err.line ? [{ line: err.line, classes: ["error-line"] }] : undefined,
+              err.line
+                ? [{ line: err.line, classes: ["error-line"] }]
+                : undefined,
             ),
           ],
         }),
@@ -67,7 +74,11 @@ export function errorHandlerModifier(webSocketSend: (msg: unknown) => void) {
     setTimeout(() => webSocketSend(payload), 200);
   }
 
-  return function modify(content: string, _req: IncomingMessage, res: ServerResponse) {
+  return function modify(
+    content: string,
+    _req: IncomingMessage,
+    res: ServerResponse,
+  ) {
     if (res.statusCode === 500 && res.hasHeader("X-Error-AWP")) {
       const startMarker = "/* awp-error-start */";
       const endMarker = "/* awp-error-end */";
@@ -76,7 +87,9 @@ export function errorHandlerModifier(webSocketSend: (msg: unknown) => void) {
       const endIndex = content.indexOf(endMarker);
 
       try {
-        const error = JSON.parse(content.slice(startIndex + startMarker.length, endIndex));
+        const error = JSON.parse(
+          content.slice(startIndex + startMarker.length, endIndex),
+        );
 
         sendError(error).catch((e) => {
           console.log(e);

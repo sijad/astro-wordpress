@@ -1,5 +1,16 @@
 /// <reference path="./php.d.ts" />
-import { mkdir, rename, rm, symlink, unlink, readFile, writeFile } from "node:fs/promises";
+import {
+  mkdir,
+  rename,
+  rm,
+  symlink,
+  unlink,
+  readFile,
+  writeFile,
+  readlink,
+  lstat,
+} from "node:fs/promises";
+import { randomUUID } from "node:crypto";
 import type { AddressInfo } from "node:net";
 import { basename, dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -7,8 +18,15 @@ import { fileURLToPath } from "node:url";
 import type { AstroIntegration, IntegrationResolvedRoute } from "astro";
 import glob from "fast-glob";
 
-import { errorHandlerModifier, pageTemplateNameComment, parseAddressInfo } from "./utils.js";
-import { createHostRewriteModifier, createHtmlTransformMiddleware } from "proxy-html-rewrite";
+import {
+  errorHandlerModifier,
+  pageTemplateNameComment,
+  parseAddressInfo,
+} from "./utils.js";
+import {
+  createHostRewriteModifier,
+  createHtmlTransformMiddleware,
+} from "proxy-html-rewrite";
 
 interface Options {
   outDir?: string;
@@ -50,6 +68,12 @@ $__getDev = function() {
   $path = '/${f}';
 
   $code = file_get_contents($base . $path, false, $context);
+  if ($code === false || trim($code) === '') {
+    status_header(503);
+    header('Retry-After: 1');
+    echo 'Astro development server is restarting. Please reload shortly.';
+    return;
+  }
 
   ob_start();
 
@@ -76,12 +100,30 @@ $__getDev = function() {
 $__getDev();`;
 
     await mkdir(dirname(themePath), { recursive: true });
-    await writeFile(themePath, tempPhp, "utf8");
+    const temporary = `${themePath}.${randomUUID()}.tmp`;
+    await writeFile(temporary, tempPhp, "utf8");
+    await rename(temporary, themePath);
+  }
+
+  async function linkPublicFile(source: string, target: string) {
+    try {
+      await symlink(source, target);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+      // Config reloads reuse matching links; builds leave regular public files/directories.
+      const existing = await lstat(target);
+      if (existing.isSymbolicLink() && (await readlink(target)) === source)
+        return;
+      await rm(target, { recursive: true, force: true });
+      await symlink(source, target);
+    }
   }
 
   async function createDevTemplates() {
     const phpAstroFiles = await glob(join(srcDir, "pages/**/*.php.astro"));
-    const templates = phpAstroFiles.map((f) => relative(join(srcDir, "/pages"), f).slice(0, -6));
+    const templates = phpAstroFiles.map((f) =>
+      relative(join(srcDir, "/pages"), f).slice(0, -6),
+    );
 
     const promises = templates.map(async (f) => {
       await createDevTemplate(f);
@@ -92,10 +134,39 @@ $__getDev();`;
       const fileName = basename(f);
       const themePath = join(outDir, fileName);
 
-      promises.push(symlink(publicDirPath ? join(publicDirPath, fileName) : f, themePath));
+      promises.push(
+        linkPublicFile(
+          publicDirPath ? join(publicDirPath, fileName) : f,
+          themePath,
+        ),
+      );
     });
 
     await Promise.all(promises);
+    await pruneTheme([...templates, ...pubFiles.map((f) => basename(f))]);
+  }
+
+  // Remove leftovers from builds or earlier sessions once the current theme is in place.
+  async function pruneTheme(expected: string[]) {
+    const keep = new Set<string>();
+    for (const path of expected) {
+      for (let p = path; p !== "." && p !== ""; p = dirname(p)) keep.add(p);
+    }
+
+    const entries = await glob("**", {
+      cwd: outDir,
+      onlyFiles: false,
+      dot: true,
+      followSymbolicLinks: false,
+    });
+
+    await Promise.all(
+      entries
+        .filter((entry) => !keep.has(entry) && !entry.endsWith(".tmp"))
+        .map((entry) =>
+          rm(join(outDir, entry), { recursive: true, force: true }),
+        ),
+    );
   }
 
   return {
@@ -190,7 +261,7 @@ export default markHTMLString(${JSON.stringify(src)});`,
           ]),
         );
 
-        await rm(outDir, { recursive: true, force: true });
+        // Keep the last working theme available while Astro restarts its server.
         await mkdir(outDir, { recursive: true });
 
         server.watcher.on("all", async (event, entry) => {
@@ -211,7 +282,7 @@ export default markHTMLString(${JSON.stringify(src)});`,
           ) {
             const themePath = join(outDir, basename(entry));
             if (event === "add" || event === "addDir") {
-              await symlink(
+              await linkPublicFile(
                 publicDirPath ? join(publicDirPath, basename(entry)) : entry,
                 themePath,
               );
@@ -222,7 +293,7 @@ export default markHTMLString(${JSON.stringify(src)});`,
         });
       },
       "astro:server:start": async ({ address }) => {
-        if (!addr) {
+        if (!devServerTarget) {
           addr = address;
         }
 
@@ -256,7 +327,9 @@ export default markHTMLString(${JSON.stringify(src)});`,
 
             await rename(themePath, finalName);
 
-            const templateNameComment = pageTemplateNameComment(basename(finalName));
+            const templateNameComment = pageTemplateNameComment(
+              basename(finalName),
+            );
 
             if (templateNameComment) {
               const buf = Buffer.from(`<?php ${templateNameComment} ?>`);
